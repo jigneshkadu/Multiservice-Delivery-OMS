@@ -1,0 +1,7 @@
+{
+  "name": "Delivery of Final Multi-Service-Platform-v1",
+  "description": "A comprehensive multi-service platform connecting users with local vendors across events, medical, transport, and more.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

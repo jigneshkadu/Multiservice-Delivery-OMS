@@ -1,0 +1,222 @@
+
+import React, { useState, useEffect } from 'react';
+import { 
+  User, UserRole, Vendor, Category, Banner, Order, SystemConfig, Product, OrderStatus, Rider
+} from './types';
+import { 
+  fetchCategories, fetchVendors, fetchBanners, createOrder, registerRider, fetchRiders, updateRiderLocation, updateRiderStatus, fetchAllOrders, assignRiderToOrder
+} from './services/api';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import BannerCarousel from './components/BannerCarousel';
+import AuthModal from './components/AuthModal';
+import VendorDashboard from './components/VendorDashboard';
+import RiderRegistration from './components/RiderRegistration';
+import RiderDashboard from './components/RiderDashboard';
+import CategoryView from './components/CategoryView';
+import BottomNav from './components/BottomNav';
+import SideMenu from './components/SideMenu';
+import FeaturedService from './components/FeaturedService';
+import DeliveryOrderModal from './components/DeliveryOrderModal';
+import MapVisualizer from './components/MapVisualizer';
+import AdminPanel from './components/AdminPanel';
+import { Loader2 } from 'lucide-react';
+
+const App: React.FC = () => {
+  const [view, setView] = useState<'HOME' | 'CATEGORY' | 'LIST' | 'ADMIN' | 'VENDOR_DASHBOARD' | 'RIDER_REG' | 'RIDER_DASHBOARD'>('HOME');
+  const [user, setUser] = useState<User | null>(null);
+  const [activeRider, setActiveRider] = useState<Rider | null>(null);
+  const [isAuthOpen, setAuthOpen] = useState(false);
+  const [authInitialMode, setAuthInitialMode] = useState<UserRole>(UserRole.USER);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [activeCategory, setActiveCategory] = useState<Category | null>(null);
+  
+  const [vendors, setVendors] = useState<Vendor[]>([]);
+  const [riders, setRiders] = useState<Rider[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  const [selectedDeliveryVendor, setSelectedDeliveryVendor] = useState<Vendor | null>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        const [cats, vends, bans, rids, ords] = await Promise.all([
+          fetchCategories(),
+          fetchVendors(),
+          fetchBanners(),
+          fetchRiders(),
+          fetchAllOrders()
+        ]);
+        setCategories(cats);
+        setVendors(vends);
+        setBanners(bans);
+        setRiders(rids);
+        setOrders(ords);
+      } catch (err: any) {
+        console.error("Critical error loading data", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadData();
+
+    const interval = setInterval(async () => {
+      const updatedRiders = await fetchRiders();
+      const updatedOrders = await fetchAllOrders();
+      setRiders(updatedRiders);
+      setOrders(updatedOrders);
+    }, 15000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleAssignRider = async (orderId: string, riderId: string) => {
+    const result = await assignRiderToOrder(orderId, riderId);
+    if (result.success) {
+      const updatedOrders = await fetchAllOrders();
+      setOrders(updatedOrders);
+    }
+  };
+
+  const handleCategoryClick = (category: Category) => {
+    setActiveCategory(category);
+    if (category.themeColor) {
+        document.documentElement.style.setProperty('--primary-color', category.themeColor);
+    }
+    setView('CATEGORY');
+    window.scrollTo(0, 0);
+  };
+
+  const handlePlaceOrder = async (items: any[], total: number) => {
+     if (!user || !selectedDeliveryVendor) return;
+     try {
+       const result = await createOrder({ vendorId: selectedDeliveryVendor.id, customerName: user.name, customerPhone: user.phone || '9876543210', address: 'Dahanu Road', amount: total, items: items });
+       if (result.success) {
+           alert("Order placed successfully! Finding nearby riders...");
+           const updatedOrders = await fetchAllOrders();
+           setOrders(updatedOrders);
+           setSelectedDeliveryVendor(null);
+       }
+     } catch (err) {
+       alert("Failed to place order.");
+     }
+  };
+
+  const openLogin = (mode: UserRole = UserRole.USER) => {
+    setAuthInitialMode(mode);
+    setAuthOpen(true);
+  };
+
+  if (isLoading) {
+      return (
+          <div className="h-screen flex flex-col items-center justify-center bg-bgLight">
+              <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+              <p className="text-gray-500 font-bold animate-pulse text-sm">Loading Dahanu...</p>
+          </div>
+      );
+  }
+
+  return (
+    <div className="flex flex-col min-h-screen">
+      <SideMenu 
+        isOpen={isMenuOpen} 
+        onClose={() => setIsMenuOpen(false)}
+        user={user}
+        onLogin={openLogin}
+        onLogout={() => { setUser(null); setActiveRider(null); setView('HOME'); }}
+        onAdminClick={() => setView('ADMIN')}
+        onRiderClick={() => setView('RIDER_REG')}
+      />
+      <Header 
+        user={user}
+        onLoginClick={() => openLogin()}
+        onLogoutClick={() => setUser(null)}
+        onMenuClick={() => setIsMenuOpen(true)}
+        onAdminClick={() => setView('ADMIN')}
+        onPartnerClick={() => openLogin(UserRole.VENDOR)}
+        onVendorDashboardClick={() => setView('VENDOR_DASHBOARD')}
+        locationText="Dahanu, MH"
+        onSearch={() => {}}
+        onHomeClick={() => setView('HOME')}
+        showBackButton={view !== 'HOME'}
+        onBackClick={() => setView('HOME')}
+      />
+
+      <main className="flex-1 pb-28 bg-gray-50/30">
+        {view === 'HOME' && (
+            <div className="container mx-auto px-4 py-4 space-y-6 animate-fade-in">
+                <BannerCarousel banners={banners} />
+                <FeaturedService vendors={vendors} onContactClick={() => {}} onOrderClick={(v) => setSelectedDeliveryVendor(v)} />
+                
+                <div className="bg-white p-6 rounded-xl shadow-sm border">
+                   <h2 className="text-xl font-bold mb-4">Riders Tracking (Live)</h2>
+                   <div className="h-64 rounded-lg overflow-hidden border">
+                      <MapVisualizer vendors={[]} riders={riders} userLocation={null} />
+                   </div>
+                </div>
+
+                <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
+                    {categories.map(cat => (
+                        <button key={cat.id} onClick={() => handleCategoryClick(cat)} className="flex flex-col items-center p-4 bg-white rounded-xl shadow-fk hover:shadow-theme transition group border border-transparent hover:border-primary/20">
+                            <div className="w-12 h-12 rounded-full mb-2 flex items-center justify-center transition-transform group-hover:scale-110" style={{ backgroundColor: `${cat.themeColor}15` }}>
+                                <div className="w-6 h-6 rounded-full" style={{ backgroundColor: cat.themeColor }}></div>
+                            </div>
+                            <span className="text-xs font-bold text-gray-800 text-center">{cat.name}</span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+        )}
+        
+        {view === 'CATEGORY' && activeCategory && (
+            <CategoryView category={activeCategory} onBack={() => setView('HOME')} onSelectSubCategory={() => {}} vendors={vendors} userLocation={null} />
+        )}
+
+        {view === 'ADMIN' && (
+           <AdminPanel 
+             categories={categories} 
+             vendors={vendors} 
+             banners={banners} 
+             orders={orders} 
+             riders={riders} 
+             onAssignRider={handleAssignRider}
+             onApproveVendor={() => {}} 
+             onRemoveVendor={() => {}}
+           />
+        )}
+
+        {view === 'RIDER_REG' && (
+            <RiderRegistration onSubmit={async (d) => { await registerRider(d); setView('HOME'); }} onCancel={() => setView('HOME')} />
+        )}
+
+        {view === 'RIDER_DASHBOARD' && activeRider && (
+            <RiderDashboard rider={activeRider} onUpdateLocation={() => {}} onUpdateStatus={() => {}} />
+        )}
+      </main>
+
+      <Footer />
+      <BottomNav categories={categories} onCategoryClick={handleCategoryClick} />
+      <AuthModal 
+        isOpen={isAuthOpen} 
+        onClose={() => setAuthOpen(false)} 
+        initialMode={authInitialMode}
+        onLoginSuccess={(email, role) => {
+          const newUser: User = { id: 'u' + Date.now(), name: email.split('@')[0], email, role: role as UserRole };
+          setUser(newUser);
+          if (role === UserRole.RIDER) {
+            setActiveRider({ id: 'r1', name: newUser.name, phone: '9000000000', vehicleType: 'BIKE', status: 'ONLINE', location: { lat: 19.97, lng: 72.73 }, isApproved: true, rating: 5 });
+            setView('RIDER_DASHBOARD');
+          }
+      }} />
+      {selectedDeliveryVendor && (
+          <DeliveryOrderModal isOpen={!!selectedDeliveryVendor} onClose={() => setSelectedDeliveryVendor(null)} vendor={selectedDeliveryVendor} onPlaceOrder={handlePlaceOrder} />
+      )}
+    </div>
+  );
+};
+
+export default App;
