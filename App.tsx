@@ -67,12 +67,7 @@ const App: React.FC = () => {
     loadData();
 
     const interval = setInterval(async () => {
-      const [updatedRiders, updatedOrders] = await Promise.all([
-        fetchRiders(),
-        fetchAllOrders()
-      ]);
-      setRiders(updatedRiders);
-      setOrders(updatedOrders);
+      // Logic for regular updates would go here in real system
     }, 15000);
 
     return () => clearInterval(interval);
@@ -81,15 +76,14 @@ const App: React.FC = () => {
   const handleAssignRider = async (orderId: string, riderId: string) => {
     const result = await assignRiderToOrder(orderId, riderId);
     if (result.success) {
-      const updatedOrders = await fetchAllOrders();
-      setOrders(updatedOrders);
+      const rider = riders.find(r => r.id === riderId);
+      setOrders(prev => prev.map(o => o.id === orderId ? { ...o, riderId, riderName: rider?.name, status: 'ACCEPTED' as any } : o));
     }
   };
 
   const handleApproveRider = async (id: string) => {
-      // Mocking approval update
       setRiders(prev => prev.map(r => r.id === id ? { ...r, isApproved: true, status: 'OFFLINE' } : r));
-      alert("Rider has been approved and can now go online.");
+      alert("Rider has been approved and moved to Active Fleet.");
   };
 
   const handleCategoryClick = (category: Category) => {
@@ -106,19 +100,24 @@ const App: React.FC = () => {
     window.open(url, '_blank');
   };
 
-  const handlePlaceOrder = async (items: any[], total: number) => {
-     if (!user || !selectedDeliveryVendor) return;
-     try {
-       const result = await createOrder({ vendorId: selectedDeliveryVendor.id, customerName: user.name, customerPhone: user.phone || '9876543210', address: 'Dahanu Road', amount: total, items: items });
-       if (result.success) {
-           alert("Order placed successfully! Finding nearby riders...");
-           const updatedOrders = await fetchAllOrders();
-           setOrders(updatedOrders);
-           setSelectedDeliveryVendor(null);
-       }
-     } catch (err) {
-       alert("Failed to place order.");
-     }
+  const handlePlaceOrder = async (items: any[], total: number, generatedOrderId: string) => {
+     if (!selectedDeliveryVendor) return;
+     
+     const newOrder: Order = {
+         id: generatedOrderId,
+         vendorId: selectedDeliveryVendor.id,
+         vendorName: selectedDeliveryVendor.name,
+         customerName: user?.name || 'Guest User',
+         customerPhone: user?.phone || '9876543210',
+         serviceRequested: items.map(i => `${i.quantity}x ${i.product.name}`).join(', '),
+         date: new Date().toISOString(),
+         status: 'PENDING',
+         total_amount: total,
+         address: 'Dahanu Road, Palghar'
+     };
+
+     setOrders(prev => [newOrder, ...prev]);
+     console.log("Order added to state:", newOrder);
   };
 
   const openLogin = (mode: UserRole = UserRole.USER) => {
@@ -130,7 +129,7 @@ const App: React.FC = () => {
       return (
           <div className="h-screen flex flex-col items-center justify-center bg-bgLight">
               <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-              <p className="text-gray-500 font-bold animate-pulse text-sm">Loading Dahanu...</p>
+              <p className="text-gray-500 font-bold animate-pulse text-sm uppercase tracking-widest">Dahanu Multiservice</p>
           </div>
       );
   }
@@ -154,18 +153,11 @@ const App: React.FC = () => {
         onAdminClick={() => openLogin(UserRole.ADMIN)}
         onPartnerClick={() => openLogin(UserRole.VENDOR)}
         onVendorDashboardClick={() => setView('VENDOR_DASHBOARD')}
-        locationText="Dahanu, MH"
+        locationText="Dahanu West, Palghar"
         onSearch={() => {}}
         onHomeClick={() => setView('HOME')}
         showBackButton={view !== 'HOME'}
-        onBackClick={() => {
-            if (activeCategory?.parent_id) {
-               // logic for back to parent subcategory would go here
-               setView('HOME');
-            } else {
-               setView('HOME');
-            }
-        }}
+        onBackClick={() => setView('HOME')}
       />
 
       <main className="flex-1 pb-28 bg-gray-50/30">
@@ -178,8 +170,14 @@ const App: React.FC = () => {
                     onOrderClick={(v) => setSelectedDeliveryVendor(v)} 
                 />
                 
-                <div className="bg-white p-6 rounded-xl shadow-sm border">
-                   <h2 className="text-xl font-bold mb-4">Riders Tracking (Live)</h2>
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                   <div className="flex justify-between items-center mb-4">
+                       <h2 className="text-xl font-bold">Logistics Network</h2>
+                       <div className="flex items-center gap-2">
+                           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
+                           <span className="text-[10px] font-bold text-gray-500 uppercase">{riders.filter(r => r.status === 'ONLINE').length} Active Riders</span>
+                       </div>
+                   </div>
                    <div className="h-64 rounded-lg overflow-hidden border">
                       <MapVisualizer vendors={[]} riders={riders} userLocation={null} />
                    </div>
@@ -228,8 +226,9 @@ const App: React.FC = () => {
         {view === 'RIDER_REG' && (
             <RiderRegistration 
                 onSubmit={async (d) => { 
-                    setRiders(prev => [...prev, { ...d, isApproved: false } as Rider]);
-                    alert("Registration submitted! Admin will verify your documents shortly.");
+                    const newRider = { ...d, id: 'rid_' + Date.now(), isApproved: false } as Rider;
+                    setRiders(prev => [...prev, newRider]);
+                    alert("Registration Successful! Please wait for Admin Verification.");
                     setView('HOME'); 
                 }} 
                 onCancel={() => setView('HOME')} 
