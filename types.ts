@@ -15,6 +15,8 @@ export interface Category {
   description?: string;
   themeColor?: string; 
   registrationFee?: number; 
+  // parent_id added to support hierarchical navigation and fix TS compilation error in App.tsx
+  parent_id?: string;
 }
 
 export interface Product {
@@ -47,6 +49,11 @@ export interface Rider {
   name: string;
   phone: string;
   vehicleType: 'BIKE' | 'SCOOTER' | 'CYCLE';
+  vehicleName?: string;
+  vehicleNumber?: string;
+  licenseNumber?: string;
+  addressProofUrl?: string;
+  licenseProofUrl?: string;
   status: 'ONLINE' | 'OFFLINE' | 'BUSY';
   location: { lat: number; lng: number };
   isApproved: boolean;

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  User, UserRole, Vendor, Category, Banner, Order, SystemConfig, Product, OrderStatus, Rider
+  User, UserRole, Vendor, Category, Banner, Order, Rider
 } from './types';
 import { 
   fetchCategories, fetchVendors, fetchBanners, createOrder, registerRider, fetchRiders, updateRiderLocation, updateRiderStatus, fetchAllOrders, assignRiderToOrder
@@ -23,7 +23,7 @@ import AdminPanel from './components/AdminPanel';
 import { Loader2 } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [view, setView] = useState<'HOME' | 'CATEGORY' | 'LIST' | 'ADMIN' | 'VENDOR_DASHBOARD' | 'RIDER_REG' | 'RIDER_DASHBOARD'>('HOME');
+  const [view, setView] = useState<'HOME' | 'CATEGORY' | 'ADMIN' | 'VENDOR_DASHBOARD' | 'RIDER_REG' | 'RIDER_DASHBOARD'>('HOME');
   const [user, setUser] = useState<User | null>(null);
   const [activeRider, setActiveRider] = useState<Rider | null>(null);
   const [isAuthOpen, setAuthOpen] = useState(false);
@@ -65,8 +65,10 @@ const App: React.FC = () => {
     loadData();
 
     const interval = setInterval(async () => {
-      const updatedRiders = await fetchRiders();
-      const updatedOrders = await fetchAllOrders();
+      const [updatedRiders, updatedOrders] = await Promise.all([
+        fetchRiders(),
+        fetchAllOrders()
+      ]);
       setRiders(updatedRiders);
       setOrders(updatedOrders);
     }, 15000);
@@ -80,6 +82,12 @@ const App: React.FC = () => {
       const updatedOrders = await fetchAllOrders();
       setOrders(updatedOrders);
     }
+  };
+
+  const handleApproveRider = async (id: string) => {
+      // Mocking approval update
+      setRiders(prev => prev.map(r => r.id === id ? { ...r, isApproved: true, status: 'OFFLINE' } : r));
+      alert("Rider has been approved and can now go online.");
   };
 
   const handleCategoryClick = (category: Category) => {
@@ -128,7 +136,7 @@ const App: React.FC = () => {
         user={user}
         onLogin={openLogin}
         onLogout={() => { setUser(null); setActiveRider(null); setView('HOME'); }}
-        onAdminClick={() => setView('ADMIN')}
+        onAdminClick={() => openLogin(UserRole.ADMIN)}
         onRiderClick={() => setView('RIDER_REG')}
       />
       <Header 
@@ -136,14 +144,21 @@ const App: React.FC = () => {
         onLoginClick={() => openLogin()}
         onLogoutClick={() => setUser(null)}
         onMenuClick={() => setIsMenuOpen(true)}
-        onAdminClick={() => setView('ADMIN')}
+        onAdminClick={() => openLogin(UserRole.ADMIN)}
         onPartnerClick={() => openLogin(UserRole.VENDOR)}
         onVendorDashboardClick={() => setView('VENDOR_DASHBOARD')}
         locationText="Dahanu, MH"
         onSearch={() => {}}
         onHomeClick={() => setView('HOME')}
         showBackButton={view !== 'HOME'}
-        onBackClick={() => setView('HOME')}
+        onBackClick={() => {
+            if (activeCategory?.parent_id) {
+               // logic for back to parent subcategory would go here
+               setView('HOME');
+            } else {
+               setView('HOME');
+            }
+        }}
       />
 
       <main className="flex-1 pb-28 bg-gray-50/30">
@@ -159,7 +174,7 @@ const App: React.FC = () => {
                    </div>
                 </div>
 
-                <div className="grid grid-cols-3 md:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     {categories.map(cat => (
                         <button key={cat.id} onClick={() => handleCategoryClick(cat)} className="flex flex-col items-center p-4 bg-white rounded-xl shadow-fk hover:shadow-theme transition group border border-transparent hover:border-primary/20">
                             <div className="w-12 h-12 rounded-full mb-2 flex items-center justify-center transition-transform group-hover:scale-110" style={{ backgroundColor: `${cat.themeColor}15` }}>
@@ -173,7 +188,13 @@ const App: React.FC = () => {
         )}
         
         {view === 'CATEGORY' && activeCategory && (
-            <CategoryView category={activeCategory} onBack={() => setView('HOME')} onSelectSubCategory={() => {}} vendors={vendors} userLocation={null} />
+            <CategoryView 
+              category={activeCategory} 
+              onBack={() => setView('HOME')} 
+              onSelectSubCategory={(sub) => handleCategoryClick(sub)} 
+              vendors={vendors} 
+              userLocation={null} 
+            />
         )}
 
         {view === 'ADMIN' && (
@@ -185,12 +206,20 @@ const App: React.FC = () => {
              riders={riders} 
              onAssignRider={handleAssignRider}
              onApproveVendor={() => {}} 
+             onApproveRider={handleApproveRider}
              onRemoveVendor={() => {}}
            />
         )}
 
         {view === 'RIDER_REG' && (
-            <RiderRegistration onSubmit={async (d) => { await registerRider(d); setView('HOME'); }} onCancel={() => setView('HOME')} />
+            <RiderRegistration 
+                onSubmit={async (d) => { 
+                    setRiders(prev => [...prev, { ...d, isApproved: false } as Rider]);
+                    alert("Registration submitted! Admin will verify your documents shortly.");
+                    setView('HOME'); 
+                }} 
+                onCancel={() => setView('HOME')} 
+            />
         )}
 
         {view === 'RIDER_DASHBOARD' && activeRider && (
@@ -207,7 +236,9 @@ const App: React.FC = () => {
         onLoginSuccess={(email, role) => {
           const newUser: User = { id: 'u' + Date.now(), name: email.split('@')[0], email, role: role as UserRole };
           setUser(newUser);
-          if (role === UserRole.RIDER) {
+          if (role === UserRole.ADMIN) {
+             setView('ADMIN');
+          } else if (role === UserRole.RIDER) {
             setActiveRider({ id: 'r1', name: newUser.name, phone: '9000000000', vehicleType: 'BIKE', status: 'ONLINE', location: { lat: 19.97, lng: 72.73 }, isApproved: true, rating: 5 });
             setView('RIDER_DASHBOARD');
           }
