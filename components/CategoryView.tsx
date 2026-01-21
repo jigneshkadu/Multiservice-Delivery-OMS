@@ -12,6 +12,9 @@ interface CategoryViewProps {
   vendors: Vendor[];
   onRegisterClick?: () => void;
   userLocation: { lat: number; lng: number } | null;
+  onContact: (vendor: Vendor) => void;
+  onDirection: (vendor: Vendor) => void;
+  onOrder: (vendor: Vendor) => void;
 }
 
 const getAllCategoryIds = (cat: Category): string[] => {
@@ -24,7 +27,10 @@ const getAllCategoryIds = (cat: Category): string[] => {
   return ids;
 };
 
-const CategoryView: React.FC<CategoryViewProps> = ({ category, onBack, onSelectSubCategory, vendors, onRegisterClick, userLocation }) => {
+const CategoryView: React.FC<CategoryViewProps> = ({ 
+  category, onBack, onSelectSubCategory, vendors, onRegisterClick, userLocation,
+  onContact, onDirection, onOrder
+}) => {
   const getIcon = (iconName: string | undefined, className: string, style?: React.CSSProperties) => {
     const props = { className, style };
     switch (iconName) {
@@ -134,9 +140,9 @@ const CategoryView: React.FC<CategoryViewProps> = ({ category, onBack, onSelectS
                         key={vendor.id} 
                         vendor={vendor} 
                         index={idx} 
-                        onContact={() => {}} 
-                        onDirection={() => {}} 
-                        onOrder={() => {}} 
+                        onContact={onContact} 
+                        onDirection={onDirection} 
+                        onOrder={onOrder} 
                       />
                   ))}
               </div>

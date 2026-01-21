@@ -18,6 +18,7 @@ import BottomNav from './components/BottomNav';
 import SideMenu from './components/SideMenu';
 import FeaturedService from './components/FeaturedService';
 import DeliveryOrderModal from './components/DeliveryOrderModal';
+import ContactModal from './components/ContactModal';
 import MapVisualizer from './components/MapVisualizer';
 import AdminPanel from './components/AdminPanel';
 import { Loader2 } from 'lucide-react';
@@ -39,6 +40,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   const [selectedDeliveryVendor, setSelectedDeliveryVendor] = useState<Vendor | null>(null);
+  const [selectedContactVendor, setSelectedContactVendor] = useState<Vendor | null>(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -97,6 +99,11 @@ const App: React.FC = () => {
     }
     setView('CATEGORY');
     window.scrollTo(0, 0);
+  };
+
+  const handleDirectionClick = (vendor: Vendor) => {
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${vendor.location.lat},${vendor.location.lng}`;
+    window.open(url, '_blank');
   };
 
   const handlePlaceOrder = async (items: any[], total: number) => {
@@ -165,7 +172,11 @@ const App: React.FC = () => {
         {view === 'HOME' && (
             <div className="container mx-auto px-4 py-4 space-y-6 animate-fade-in">
                 <BannerCarousel banners={banners} />
-                <FeaturedService vendors={vendors} onContactClick={() => {}} onOrderClick={(v) => setSelectedDeliveryVendor(v)} />
+                <FeaturedService 
+                    vendors={vendors} 
+                    onContactClick={(v) => setSelectedContactVendor(v)} 
+                    onOrderClick={(v) => setSelectedDeliveryVendor(v)} 
+                />
                 
                 <div className="bg-white p-6 rounded-xl shadow-sm border">
                    <h2 className="text-xl font-bold mb-4">Riders Tracking (Live)</h2>
@@ -194,6 +205,9 @@ const App: React.FC = () => {
               onSelectSubCategory={(sub) => handleCategoryClick(sub)} 
               vendors={vendors} 
               userLocation={null} 
+              onContact={(v) => setSelectedContactVendor(v)}
+              onDirection={(v) => handleDirectionClick(v)}
+              onOrder={(v) => setSelectedDeliveryVendor(v)}
             />
         )}
 
@@ -243,8 +257,17 @@ const App: React.FC = () => {
             setView('RIDER_DASHBOARD');
           }
       }} />
+      
       {selectedDeliveryVendor && (
           <DeliveryOrderModal isOpen={!!selectedDeliveryVendor} onClose={() => setSelectedDeliveryVendor(null)} vendor={selectedDeliveryVendor} onPlaceOrder={handlePlaceOrder} />
+      )}
+
+      {selectedContactVendor && (
+          <ContactModal 
+            vendor={selectedContactVendor} 
+            onClose={() => setSelectedContactVendor(null)} 
+            onDirection={handleDirectionClick}
+          />
       )}
     </div>
   );
