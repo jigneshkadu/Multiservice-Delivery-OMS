@@ -1,30 +1,25 @@
-// Mock Firebase Configuration
-// The actual firebase dependency calls have been commented out to resolve missing module errors.
 
-/*
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider, OAuthProvider } from "firebase/auth";
 
-// TODO: Replace the following with your app's Firebase project configuration
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBOUKkKTNvx67VmI3kxG3UFJ3dIfI37ZeQ",
+  authDomain: "mydahanu-d01f5.firebaseapp.com",
+  projectId: "mydahanu-d01f5",
+  storageBucket: "mydahanu-d01f5.firebasestorage.app",
+  messagingSenderId: "444935418464",
+  appId: "1:444935418464:web:d5941c9e38bac35b5fc905",
+  measurementId: "G-PFBMB19LFC"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-
-// Initialize Auth
 export const auth = getAuth(app);
-auth.useDeviceLanguage();
-*/
 
-// Export a mock auth object to prevent import errors in consuming files
-export const auth = {
-    currentUser: null,
-    signOut: async () => console.log('Mock signOut'),
-};
+// Providers
+export const googleProvider = new GoogleAuthProvider();
+export const microsoftProvider = new OAuthProvider('microsoft.com');
+export const appleProvider = new OAuthProvider('apple.com');
+
+export default app;

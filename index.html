@@ -8,20 +8,26 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       :root {
-        --primary-color: #9C81A4; /* Default Mauve */
-        --primary-shadow: rgba(156, 129, 164, 0.25);
+        --primary-color: #9C27B0; 
+        --primary-shadow: rgba(156, 39, 176, 0.2);
+        --secondary-color: #FF9800; 
+        /* Match the slate bluish-grey background from the image */
+        --app-bg-color: #9293a3; 
+        --lavender-bg: #a08dae;
       }
-      /* Hide scrollbar for Chrome, Safari and Opera */
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        background-color: var(--app-bg-color);
+      }
       .no-scrollbar::-webkit-scrollbar {
           display: none;
       }
-      /* Hide scrollbar for IE, Edge and Firefox */
       .no-scrollbar {
-          -ms-overflow-style: none;  /* IE and Edge */
-          scrollbar-width: none;  /* Firefox */
+          -ms-overflow-style: none;
+          scrollbar-width: none;
       }
-      
-      /* Logo Font */
       @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;700&display=swap');
     </style>
     <script>
@@ -30,11 +36,9 @@
           extend: {
             colors: {
               primary: 'var(--primary-color)',
-              secondary: '#fb641b', // Flipkart Orange
-              bgLight: '#f1f3f6',
-            },
-            boxShadow: {
-              'theme': '0 4px 20px -2px var(--primary-shadow)',
+              secondary: 'var(--secondary-color)',
+              appBg: 'var(--app-bg-color)',
+              lavender: 'var(--lavender-bg)',
             },
             fontFamily: {
               logo: ['Comfortaa', 'cursive'],
@@ -43,26 +47,25 @@
         }
       }
     </script>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
-    "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
+    "firebase/": "https://esm.sh/firebase@^12.8.0/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "react": "https://esm.sh/react@^19.2.3",
+    "url": "https://esm.sh/url@^0.11.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "vite": "https://esm.sh/vite@^7.3.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
     "path": "https://esm.sh/path@^0.12.7",
-    "url": "https://esm.sh/url@^0.11.4"
+    "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
+    "vite": "https://esm.sh/vite@^7.3.1"
   }
 }
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="font-sans antialiased text-gray-800 min-h-screen bg-gradient-to-b from-[#1a1c2e] via-[#2d2b42] to-[#f3f4f6]">
+  <body class="font-sans antialiased text-gray-800 min-h-screen">
     <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
