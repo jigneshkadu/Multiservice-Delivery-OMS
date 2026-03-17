@@ -40,7 +40,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, amount, ti
         {/* Header */}
         <div className="bg-[#1a1c2e] text-white p-4 flex justify-between items-center">
             <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-green-400" />
+                <ShieldCheck className="w-5 h-5 text-slate-400" />
                 <span className="font-bold tracking-wide">Secure Payment</span>
             </div>
             <button onClick={onClose} disabled={processing} className="hover:bg-white/10 p-1 rounded transition">
@@ -63,7 +63,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, amount, ti
                             onClick={() => setMethod('UPI')}
                             className={`w-full flex items-center gap-4 p-3 rounded-lg border-2 transition-all ${method === 'UPI' ? 'border-secondary bg-orange-50' : 'border-gray-100 hover:border-gray-300'}`}
                         >
-                            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-green-600">
+                            <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-sm text-slate-600">
                                 <Smartphone className="w-5 h-5" />
                             </div>
                             <div className="text-left">
@@ -104,7 +104,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, amount, ti
 
                     <button 
                         onClick={handlePay}
-                        className="w-full bg-green-600 text-white py-3.5 rounded-lg font-bold shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-2"
+                        className="w-full bg-slate-600 text-white py-3.5 rounded-lg font-bold shadow-lg hover:bg-slate-700 transition flex items-center justify-center gap-2"
                     >
                         PAY ₹{amount}
                     </button>
@@ -121,8 +121,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ isOpen, onClose, amount, ti
 
             {step === 'SUCCESS' && (
                 <div className="flex flex-col items-center justify-center py-8">
-                    <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-4 animate-bounce">
-                        <CheckCircle className="w-10 h-10 text-green-600" />
+                    <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4 animate-bounce">
+                        <CheckCircle className="w-10 h-10 text-slate-600" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-800">Payment Successful!</h3>
                     <p className="text-sm text-gray-500">Redirecting...</p>

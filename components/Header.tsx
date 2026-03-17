@@ -31,31 +31,31 @@ const Header: React.FC<HeaderProps> = ({
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-[#1a1c2e]/95 backdrop-blur-md text-white shadow-lg border-b border-white/10 transition-all duration-300">
+    <header className="sticky top-0 z-50 bg-white/60 backdrop-blur-2xl text-slate-900 shadow-[0_2px_15px_rgba(0,0,0,0.05)] border-b border-white/40 transition-all duration-300">
       <div className="container mx-auto px-4 py-3 md:py-4 flex items-center justify-between gap-4">
         
         {/* Left: Menu, Back, Logo */}
         <div className="flex items-center gap-2 md:gap-4">
-            <button onClick={onMenuClick} className="p-2 -ml-2 text-yellow-400 hover:text-yellow-300 hover:bg-white/10 rounded-full transition-colors">
+            <button onClick={onMenuClick} className="p-2 -ml-2 text-primary hover:bg-primary/10 rounded-full transition-colors">
                 <Menu className="w-6 h-6" />
             </button>
 
             {showBackButton && (
-               <button onClick={onBackClick} className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-colors animate-fade-in">
+               <button onClick={onBackClick} className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors animate-fade-in">
                   <ArrowLeft className="w-6 h-6" />
                </button>
             )}
             
             <div className="flex flex-col cursor-pointer group relative select-none" onClick={onHomeClick}>
-                <h1 className="text-3xl font-logo font-bold tracking-tighter text-white lowercase leading-none">
-                    dahanu
+                <h1 className="text-2xl md:text-3xl font-bold tracking-tighter text-slate-900 lowercase leading-none">
+                    dahanu<span className="text-primary">.</span>
                 </h1>
-                <span className="text-[10px] font-bold text-yellow-400 tracking-wider uppercase mt-0.5">
-                    Multiservice Platform
+                <span className="text-[10px] font-bold text-slate-400 tracking-wider uppercase mt-0.5">
+                    Multiservice
                 </span>
             </div>
 
-            <div className="hidden lg:flex items-center gap-1 text-xs text-gray-300 bg-white/5 px-3 py-1.5 rounded-full border border-white/10 ml-4">
+            <div className="hidden lg:flex items-center gap-1 text-xs text-slate-500 bg-slate-100 px-3 py-1.5 rounded-full border border-slate-200 ml-4">
                 <MapPin className="w-3 h-3 text-secondary"/> 
                 <span className="truncate max-w-[150px]">{locationText}</span>
             </div>
@@ -64,12 +64,12 @@ const Header: React.FC<HeaderProps> = ({
         {/* Center: Search Bar (Desktop) */}
         <form onSubmit={handleSearchSubmit} className="flex-1 max-w-sm relative hidden md:block group mx-4">
           <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-             <Search className="h-4 w-4 text-gray-400 group-focus-within:text-primary transition-colors" />
+             <Search className="h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
           </div>
           <input
             type="text"
             placeholder="Search services..."
-            className="w-full py-2 pl-10 pr-4 rounded-full bg-white/10 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:bg-white/20 transition-all text-sm"
+            className="w-full py-2 pl-10 pr-4 rounded-full bg-slate-100 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all text-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -79,7 +79,7 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center gap-3 md:gap-5">
            <button 
               onClick={onRegisterBusiness}
-              className="hidden sm:flex items-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-[#1a1c2e] px-4 py-2 rounded-full font-black text-[10px] uppercase tracking-wider transition-all shadow-lg active:scale-95"
+              className="hidden sm:flex items-center gap-2 bg-secondary hover:bg-amber-600 text-white px-4 py-2 rounded-full font-bold text-[10px] uppercase tracking-wider transition-all shadow-sm active:scale-95"
            >
               <PlusCircle className="w-4 h-4" />
               List Business
@@ -87,22 +87,22 @@ const Header: React.FC<HeaderProps> = ({
 
           {user ? (
             <div className="relative group">
-              <button className="flex items-center gap-2 hover:bg-white/10 p-1 pr-3 rounded-full transition-all border border-transparent hover:border-white/10">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-purple-600 flex items-center justify-center text-white font-bold text-xs shadow-lg border border-white/20">
+              <button className="flex items-center gap-2 hover:bg-slate-100 p-1 pr-3 rounded-full transition-all border border-transparent hover:border-slate-200">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-slate-400 flex items-center justify-center text-white font-bold text-xs shadow-sm border border-white/20">
                     {user.name.charAt(0).toUpperCase()}
                 </div>
               </button>
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white text-gray-800 shadow-2xl rounded-xl overflow-hidden hidden group-hover:block z-50 animate-fade-in border border-gray-100">
-                 <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+              <div className="absolute right-0 top-full mt-2 w-48 bg-white text-slate-800 shadow-2xl rounded-xl overflow-hidden hidden group-hover:block z-50 animate-fade-in border border-slate-100">
+                 <div className="p-4 border-b border-slate-100 bg-slate-50/50">
                     <p className="font-bold text-sm truncate">{user.name}</p>
-                    <p className="text-[10px] text-gray-400 uppercase font-black">{user.role}</p>
+                    <p className="text-[10px] text-slate-400 uppercase font-black">{user.role}</p>
                  </div>
                  <div className="flex flex-col py-1">
                     {user.role === UserRole.ADMIN && (
-                        <button onClick={onAdminClick} className="px-4 py-2.5 hover:bg-gray-50 text-left text-sm font-semibold text-primary flex items-center gap-2">Admin Panel</button>
+                        <button onClick={onAdminClick} className="px-4 py-2.5 hover:bg-slate-50 text-left text-sm font-semibold text-primary flex items-center gap-2">Admin Panel</button>
                     )}
                     {user.role === UserRole.VENDOR && (
-                        <button onClick={onVendorDashboardClick} className="px-4 py-2.5 hover:bg-gray-50 text-left text-sm font-semibold text-secondary flex items-center gap-2">Dashboard</button>
+                        <button onClick={onVendorDashboardClick} className="px-4 py-2.5 hover:bg-slate-50 text-left text-sm font-semibold text-secondary flex items-center gap-2">Dashboard</button>
                     )}
                     <button onClick={onLogoutClick} className="px-4 py-2.5 hover:bg-red-50 text-left text-sm text-red-500 font-bold">Logout</button>
                  </div>
@@ -111,7 +111,7 @@ const Header: React.FC<HeaderProps> = ({
           ) : (
             <button 
                 onClick={onLoginClick} 
-                className="flex items-center gap-2 bg-white text-gray-900 px-5 py-2 rounded-full font-bold text-xs shadow-lg hover:shadow-xl hover:bg-gray-100 transition-all active:scale-95"
+                className="flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-full font-bold text-xs shadow-md hover:shadow-lg hover:bg-slate-700 transition-all active:scale-95"
             >
               <UserIcon className="w-4 h-4" />
               <span>Login</span>
@@ -125,11 +125,11 @@ const Header: React.FC<HeaderProps> = ({
            <input 
              type="text" 
              placeholder="Search Dahanu..." 
-             className="w-full py-2.5 px-4 rounded-full bg-white/10 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:bg-white/20 text-sm"
+             className="w-full py-2.5 px-4 rounded-full bg-slate-100 border border-slate-200 text-slate-900 placeholder-slate-400 focus:outline-none focus:bg-white text-sm"
              value={searchQuery}
              onChange={(e) => setSearchQuery(e.target.value)}
            />
-           <Search className="absolute right-4 top-2.5 h-4 w-4 text-gray-400" />
+           <Search className="absolute right-4 top-2.5 h-4 w-4 text-slate-400" />
         </form>
       </div>
     </header>

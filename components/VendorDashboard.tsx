@@ -241,7 +241,7 @@ const VendorDashboard: React.FC<VendorDashboardProps> = ({ vendor, orders, onUpd
                                     <p className="font-bold text-sm text-gray-800 truncate">{order.serviceRequested}</p>
                                     <p className="text-[10px] text-gray-400 uppercase font-bold">{order.date.split('T')[0]}</p>
                                 </div>
-                                <CheckCircle className="w-5 h-5 text-green-500 shrink-0 ml-2" />
+                                <CheckCircle className="w-5 h-5 text-slate-500 shrink-0 ml-2" />
                             </div>
                         ))}
                         {pastOrders.length === 0 && <p className="text-xs text-gray-400 italic">No historical records found.</p>}

@@ -112,7 +112,7 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
                           </div>
                           <div className="flex justify-between text-sm">
                               <span className="text-gray-500">Delivery Fee</span>
-                              <span className="text-green-600 font-bold">FREE</span>
+                              <span className="text-slate-600 font-bold">FREE</span>
                           </div>
                           <div className="flex justify-between text-xl font-black text-gray-900 pt-2 border-t border-dashed">
                               <span>Total Paid</span>
@@ -138,8 +138,8 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
       return (
           <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
               <div className="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center max-w-sm w-full mx-4">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
-                      <CheckCircle className="w-10 h-10 text-green-600" />
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                      <CheckCircle className="w-10 h-10 text-slate-600" />
                   </div>
                   <h2 className="text-xl font-bold text-gray-800 mb-2">Order Confirmed!</h2>
                   <p className="text-center text-gray-500 mb-2">Order ID: <span className="font-mono font-bold text-gray-900">{lastOrderId}</span></p>
@@ -208,10 +208,10 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
                                     
                                     <div className="mt-3">
                                         {qty > 0 ? (
-                                            <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded overflow-hidden">
-                                                <button onClick={() => handleQuantityChange(product.name, -1)} className="px-3 py-1 text-green-700 hover:bg-green-100 font-bold">-</button>
-                                                <span className="font-bold text-sm text-green-800">{qty}</span>
-                                                <button onClick={() => handleQuantityChange(product.name, 1)} className="px-3 py-1 text-green-700 hover:bg-green-100 font-bold">+</button>
+                                            <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded overflow-hidden">
+                                                <button onClick={() => handleQuantityChange(product.name, -1)} className="px-3 py-1 text-slate-700 hover:bg-slate-100 font-bold">-</button>
+                                                <span className="font-bold text-sm text-slate-800">{qty}</span>
+                                                <button onClick={() => handleQuantityChange(product.name, 1)} className="px-3 py-1 text-slate-700 hover:bg-slate-100 font-bold">+</button>
                                             </div>
                                         ) : (
                                             <button 
@@ -274,7 +274,7 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
                 </div>
                 <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-600">Delivery Fee</span>
-                    <span className="font-bold text-green-600">FREE</span>
+                    <span className="font-bold text-slate-600">FREE</span>
                 </div>
                 <div className="border-t border-gray-200 pt-3 flex justify-between items-center text-lg font-bold text-gray-900">
                     <span>To Pay</span>

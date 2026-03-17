@@ -2,7 +2,7 @@
 import { Order, OrderStatus, Vendor, Category, Banner, Rider, DeliveryTask } from '../types';
 import { APP_CATEGORIES, MOCK_VENDORS, INITIAL_BANNERS, MOCK_ORDERS } from '../constants';
 
-const API_BASE = 'http://localhost:5000/api';
+const API_BASE = '/api';
 
 async function fetchWithFallback<T>(url: string, fallbackData: T): Promise<T> {
   try {

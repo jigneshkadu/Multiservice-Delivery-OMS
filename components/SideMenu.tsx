@@ -27,23 +27,23 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user, onLogin, onL
       <div className={`fixed top-0 left-0 bottom-0 w-80 bg-white shadow-2xl z-[101] transform transition-transform duration-500 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} flex flex-col`}>
         
         {/* Header */}
-        <div className="bg-[#1a1c2e] text-white p-6 flex items-center justify-between shrink-0">
+        <div className="bg-primary text-white p-6 flex items-center justify-between shrink-0">
            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center border border-white/10 shadow-xl">
+              <div className="w-12 h-12 rounded-2xl bg-white/20 flex items-center justify-center border border-white/20 shadow-xl">
                  <UserCircle className="w-7 h-7" />
               </div>
               <div className="overflow-hidden">
                 {user ? (
                     <div className="flex flex-col">
                         <span className="font-bold text-sm truncate">{user.name}</span>
-                        <span className="text-[10px] font-black text-yellow-400 uppercase tracking-widest">{user.role} Account</span>
+                        <span className="text-[10px] font-black text-secondary uppercase tracking-widest">{user.role} Account</span>
                     </div>
                 ) : (
                     <div className="font-bold text-sm">Welcome Guest</div>
                 )}
               </div>
            </div>
-           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6 text-gray-400" /></button>
+           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors"><X className="w-6 h-6 text-white/80" /></button>
         </div>
 
         {/* Menu Items */}
@@ -52,21 +52,21 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user, onLogin, onL
             {/* Rider Section - AT TOP */}
             {!user && (
               <div className="animate-fade-in">
-                  <h3 className="font-black text-[10px] text-gray-400 mb-4 uppercase tracking-[0.2em] px-1">Rider Partners</h3>
+                  <h3 className="font-black text-[10px] text-slate-400 mb-4 uppercase tracking-[0.2em] px-1">Rider Partners</h3>
                   <div className="grid grid-cols-2 gap-2">
                       <button 
                         onClick={() => { onRiderClick(); onClose(); }}
-                        className="flex flex-col items-center justify-center p-3 bg-blue-50 border border-blue-100 rounded-xl transition-all hover:bg-blue-100 active:scale-95 group"
+                        className="flex flex-col items-center justify-center p-3 bg-slate-50 border border-slate-100 rounded-xl transition-all hover:bg-slate-100 active:scale-95 group"
                       >
-                          <UserPlus className="w-5 h-5 text-blue-600 mb-1" />
-                          <span className="text-[10px] font-black text-blue-700 uppercase">Join Us</span>
+                          <UserPlus className="w-5 h-5 text-primary mb-1" />
+                          <span className="text-[10px] font-black text-slate-700 uppercase">Join Us</span>
                       </button>
                       <button 
                         onClick={() => { onLogin(UserRole.RIDER); onClose(); }}
-                        className="flex flex-col items-center justify-center p-3 bg-white border border-gray-200 rounded-xl transition-all hover:bg-gray-50 active:scale-95 group"
+                        className="flex flex-col items-center justify-center p-3 bg-white border border-slate-200 rounded-xl transition-all hover:bg-slate-50 active:scale-95 group"
                       >
-                          <Bike className="w-5 h-5 text-gray-600 mb-1" />
-                          <span className="text-[10px] font-black text-gray-700 uppercase">Login</span>
+                          <Bike className="w-5 h-5 text-slate-600 mb-1" />
+                          <span className="text-[10px] font-black text-slate-700 uppercase">Login</span>
                       </button>
                   </div>
               </div>
@@ -106,21 +106,21 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user, onLogin, onL
         </div>
         
         {/* Footer/Bottom - ADMIN PORTAL */}
-        <div className="p-4 border-t border-gray-100 space-y-4">
+        <div className="p-4 border-t border-slate-100 space-y-4">
             {!user && (
                 <button 
                     onClick={() => { onLogin(UserRole.ADMIN); onClose(); }}
-                    className="w-full text-left px-4 py-3 bg-gray-900 text-white rounded-xl flex items-center gap-3 text-sm font-bold transition-all hover:bg-black active:scale-95"
+                    className="w-full text-left px-4 py-3 bg-slate-900 text-white rounded-xl flex items-center gap-3 text-sm font-bold transition-all hover:bg-black active:scale-95"
                 >
-                    <ShieldAlert className="w-4 h-4 text-yellow-400" /> Admin Portal Login
+                    <ShieldAlert className="w-4 h-4 text-secondary" /> Admin Portal Login
                 </button>
             )}
             {user?.role === UserRole.ADMIN && (
-                <button onClick={() => { onAdminClick(); onClose(); }} className="w-full text-left px-4 py-3 bg-purple-600 text-white rounded-xl flex items-center gap-3 text-sm font-bold transition-colors">
+                <button onClick={() => { onAdminClick(); onClose(); }} className="w-full text-left px-4 py-3 bg-primary text-white rounded-xl flex items-center gap-3 text-sm font-bold transition-colors">
                     <ShieldCheck className="w-4 h-4" /> Go to Admin Panel
                 </button>
             )}
-            <div className="text-[10px] text-gray-400 font-black text-center uppercase tracking-widest">
+            <div className="text-[10px] text-slate-400 font-black text-center uppercase tracking-widest">
                 Dahanu multiservice • v2.1
             </div>
         </div>

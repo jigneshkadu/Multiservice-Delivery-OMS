@@ -42,41 +42,31 @@ const BottomNav: React.FC<BottomNavProps> = ({ categories, onCategoryClick }) =>
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur shadow-[0_-2px_15px_rgba(0,0,0,0.05)] z-50 h-28 flex items-center border-t border-gray-200 pb-safe">
-       {/* Scroll Button Left */}
-       <button onClick={() => scroll('left')} className="p-2 h-full bg-white hover:bg-gray-50 z-10 hidden md:flex items-center justify-center border-r border-gray-200">
-         <ChevronLeft className="w-6 h-6 text-gray-600" />
-       </button>
-
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-[92%] max-w-lg bg-white/70 backdrop-blur-2xl shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] z-50 h-20 flex items-center border border-white/40 rounded-[2.5rem] overflow-hidden px-2 saturate-150">
        {/* Scrollable Container */}
        <div 
          ref={scrollRef}
-         className="flex-1 flex items-center overflow-x-auto gap-3 px-3 no-scrollbar h-full py-2"
+         className="flex-1 flex items-center overflow-x-auto gap-0.5 px-2 no-scrollbar h-full py-1"
        >
           {categories.map(cat => (
              <button 
                 key={cat.id} 
                 onClick={() => onCategoryClick(cat)}
-                className="flex flex-col items-center justify-center min-w-[90px] h-[85px] rounded-xl bg-white border border-transparent hover:border-gray-200 transition-all active:scale-95 group"
+                className="flex flex-col items-center justify-center min-w-[72px] h-[64px] rounded-2xl hover:bg-white/40 transition-all active:scale-90 group relative"
              >
                 <div 
-                  className="transition-transform group-hover:-translate-y-1 duration-200 p-2.5 rounded-full mb-1" 
+                  className="transition-all group-hover:-translate-y-1 duration-300 p-1.5 rounded-xl mb-0.5 group-hover:shadow-sm" 
                   style={{ backgroundColor: `${cat.themeColor || '#666'}15` }}
                 >
                    {getIcon(cat.icon, cat.themeColor || '#666')}
                 </div>
-                {/* Ensure text is dark and legible */}
-                <span className="text-[11px] font-bold text-center leading-tight px-1 truncate w-full text-gray-900 group-hover:text-black">
+                <span className="text-[9px] font-black text-center leading-tight px-1 truncate w-full text-slate-800 group-hover:text-black uppercase tracking-tighter opacity-80 group-hover:opacity-100">
                     {cat.name}
                 </span>
+                <div className="absolute bottom-1 w-1 h-1 bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
              </button>
           ))}
        </div>
-
-       {/* Scroll Button Right */}
-       <button onClick={() => scroll('right')} className="p-2 h-full bg-white hover:bg-gray-50 z-10 hidden md:flex items-center justify-center border-l border-gray-200">
-         <ChevronRight className="w-6 h-6 text-gray-600" />
-       </button>
     </div>
   );
 }

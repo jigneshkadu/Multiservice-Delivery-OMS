@@ -41,11 +41,11 @@ INSERT IGNORE INTO categories (id, name, icon, description, theme_color) VALUES
 ('medical', 'Medical & Health', 'Stethoscope', 'Healthcare services, clinics, and emergency support.', '#2196F3'),
 ('transport', 'Transport', 'Truck', 'Logistics, travel agencies, and vehicle rentals.', '#FF9800'),
 ('beauty', 'Beauty & Wellness', 'Sparkles', 'Salons, spas, and fitness centers.', '#E91E63'),
-('home', 'Home & Maintenance', 'Hammer', 'Repairs, renovations, and handyman services.', '#4CAF50'),
-('housekeeping', 'Housekeeping', 'SprayCan', 'Maids, cooks, and daily utility supplies.', '#009688'),
+('home', 'Home & Maintenance', 'Hammer', 'Repairs, renovations, and handyman services.', '#64748b'),
+('housekeeping', 'Housekeeping', 'SprayCan', 'Maids, cooks, and daily utility supplies.', '#334155'),
 ('food', 'Food & Beverages', 'Utensils', 'Restaurants, cafes, and street food.', '#F44336'),
 ('accom', 'Accommodation', 'Hotel', 'Hotels, lodges, and guest houses.', '#FFC107'),
-('dahanu_fresh', 'Dahanu Fresh', 'Apple', 'Fresh fruits, vegetables and organic produce.', '#43A047'),
+('dahanu_fresh', 'Dahanu Fresh', 'Apple', 'Fresh fruits, vegetables and organic produce.', '#475569'),
 ('dahanu_mart', 'Dahanu Mart', 'ShoppingBasket', 'Groceries and daily essentials.', '#FF5722');
 
 -- ==========================================

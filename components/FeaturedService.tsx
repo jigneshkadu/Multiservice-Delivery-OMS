@@ -60,14 +60,14 @@ const FeaturedService: React.FC<FeaturedServiceProps> = ({ vendors, pinnedVendor
            
            <div className="flex items-center justify-between">
               <div className="flex items-center gap-1 bg-white border border-gray-100 px-2 py-1 rounded-full text-[10px] font-bold shadow-sm">
-                 <span className="text-green-600">{displayVendor.rating}</span> <Star className="w-2 h-2 fill-green-600 text-green-600" />
+                 <span className="text-slate-600">{displayVendor.rating}</span> <Star className="w-2 h-2 fill-slate-600 text-slate-600" />
               </div>
               
               {/* Dynamic Action Button */}
               {displayVendor.supportsDelivery && onOrderClick ? (
                   <button 
                     onClick={() => onOrderClick(displayVendor)}
-                    className="bg-green-600 text-white text-xs px-4 py-1.5 rounded-full shadow hover:bg-green-700 transition flex items-center gap-1 font-bold animate-fade-in"
+                    className="bg-slate-600 text-white text-xs px-4 py-1.5 rounded-full shadow hover:bg-slate-700 transition flex items-center gap-1 font-bold animate-fade-in"
                   >
                      <ShoppingBag className="w-3 h-3" /> Order Now
                   </button>

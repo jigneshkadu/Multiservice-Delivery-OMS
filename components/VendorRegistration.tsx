@@ -375,7 +375,7 @@ const VendorRegistration: React.FC<VendorRegistrationProps> = ({ categories, onS
                     />
                     <label 
                         htmlFor="product-image-reg" 
-                        className={`w-full border rounded p-2 text-xs flex items-center justify-center gap-1 cursor-pointer truncate ${newProduct.image ? 'bg-green-50 border-green-300 text-green-700 font-bold' : 'bg-white text-gray-500 hover:bg-gray-100'}`}
+                        className={`w-full border rounded p-2 text-xs flex items-center justify-center gap-1 cursor-pointer truncate ${newProduct.image ? 'bg-slate-50 border-slate-300 text-slate-700 font-bold' : 'bg-white text-gray-500 hover:bg-gray-100'}`}
                         title={newProduct.image ? "Image Selected" : "Browse Product Image"}
                     >
                         {newProduct.image ? (

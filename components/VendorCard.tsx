@@ -25,7 +25,7 @@ const VendorCard: React.FC<VendorCardProps> = ({ vendor, index, onContact, onDir
             className="w-full h-full object-cover group-hover:scale-105 transition-transform" 
         />
         {vendor.isVerified && (
-            <div className="absolute top-1 left-1 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
+            <div className="absolute top-1 left-1 bg-slate-600 text-white text-[10px] font-bold px-2 py-0.5 rounded flex items-center gap-1">
                 <CheckCircle className="w-3 h-3"/> VERIFIED
             </div>
         )}
@@ -44,7 +44,7 @@ const VendorCard: React.FC<VendorCardProps> = ({ vendor, index, onContact, onDir
                     {vendor.name}
                 </h3>
                 {vendor.supportsDelivery && (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-green-50 text-green-700 border border-green-100 mb-1">
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-slate-50 text-slate-700 border border-slate-100 mb-1">
                         <Truck className="w-3 h-3" /> Delivery Available
                     </span>
                 )}
@@ -52,7 +52,7 @@ const VendorCard: React.FC<VendorCardProps> = ({ vendor, index, onContact, onDir
         </div>
 
         <div className="flex items-center gap-2 text-sm mb-2">
-           <span className="bg-green-600 text-white px-1.5 rounded text-xs font-bold flex items-center">
+           <span className="bg-slate-600 text-white px-1.5 rounded text-xs font-bold flex items-center">
                {vendor.rating} <Star className="w-3 h-3 ml-0.5 fill-current"/>
            </span>
            <span className="text-gray-500 text-xs">120 Ratings</span>
@@ -97,7 +97,7 @@ const VendorCard: React.FC<VendorCardProps> = ({ vendor, index, onContact, onDir
              {vendor.supportsDelivery ? (
                  <button 
                      onClick={() => onOrder(vendor)}
-                     className="bg-green-600 text-white px-4 py-2.5 rounded-md font-bold shadow hover:bg-green-700 w-full flex items-center justify-center gap-2 transition-colors text-sm"
+                     className="bg-slate-600 text-white px-4 py-2.5 rounded-md font-bold shadow hover:bg-slate-700 w-full flex items-center justify-center gap-2 transition-colors text-sm"
                  >
                      <ShoppingBag className="w-4 h-4" /> Order Now
                  </button>

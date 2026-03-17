@@ -140,20 +140,20 @@ const RiderRegistration: React.FC<RiderRegistrationProps> = ({ onSubmit, onCance
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <label className="block text-xs font-black text-gray-500 uppercase">Driving License Proof</label>
-                <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${docs.license ? 'bg-green-50 border-green-200' : 'border-gray-200 hover:border-primary bg-gray-50'}`}>
+                <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${docs.license ? 'bg-slate-50 border-slate-200' : 'border-gray-200 hover:border-primary bg-gray-50'}`}>
                     <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileUpload('license', e)} accept="image/*" />
                     <div className="flex flex-col items-center gap-2">
-                        {docs.license ? <CheckCircle className="w-8 h-8 text-green-600"/> : <Camera className="w-8 h-8 text-gray-400"/>}
+                        {docs.license ? <CheckCircle className="w-8 h-8 text-slate-600"/> : <Camera className="w-8 h-8 text-gray-400"/>}
                         <span className="text-xs font-bold text-gray-600">{docs.license ? 'License Uploaded' : 'Click to Upload License'}</span>
                     </div>
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="block text-xs font-black text-gray-500 uppercase">Aadhar / Address Proof</label>
-                <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${docs.address ? 'bg-green-50 border-green-200' : 'border-gray-200 hover:border-primary bg-gray-50'}`}>
+                <div className={`relative border-2 border-dashed rounded-xl p-4 transition-all ${docs.address ? 'bg-slate-50 border-slate-200' : 'border-gray-200 hover:border-primary bg-gray-50'}`}>
                     <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileUpload('address', e)} accept="image/*" />
                     <div className="flex flex-col items-center gap-2">
-                        {docs.address ? <CheckCircle className="w-8 h-8 text-green-600"/> : <Camera className="w-8 h-8 text-gray-400"/>}
+                        {docs.address ? <CheckCircle className="w-8 h-8 text-slate-600"/> : <Camera className="w-8 h-8 text-gray-400"/>}
                         <span className="text-xs font-bold text-gray-600">{docs.address ? 'Address Proof Uploaded' : 'Click to Upload Aadhar'}</span>
                     </div>
                 </div>

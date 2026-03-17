@@ -42,13 +42,13 @@ const RiderDashboard: React.FC<RiderDashboardProps> = ({ rider, onUpdateStatus, 
         </div>
 
         <div className="flex items-center gap-3">
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold ${rider.status === 'ONLINE' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+          <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold ${rider.status === 'ONLINE' ? 'bg-slate-100 text-slate-700' : 'bg-gray-100 text-gray-600'}`}>
             <Power className="w-4 h-4" />
             {rider.status}
           </div>
           <button 
             onClick={() => onUpdateStatus(rider.status === 'ONLINE' ? 'OFFLINE' : 'ONLINE')}
-            className={`px-6 py-2 rounded-lg font-bold shadow transition ${rider.status === 'ONLINE' ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-green-600 text-white hover:bg-green-700'}`}
+            className={`px-6 py-2 rounded-lg font-bold shadow transition ${rider.status === 'ONLINE' ? 'bg-red-500 text-white hover:bg-red-600' : 'bg-slate-600 text-white hover:bg-slate-700'}`}
           >
             Go {rider.status === 'ONLINE' ? 'Offline' : 'Online'}
           </button>
@@ -80,7 +80,7 @@ const RiderDashboard: React.FC<RiderDashboardProps> = ({ rider, onUpdateStatus, 
             <div className="space-y-4">
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Status</span>
-                <span className={tracking ? 'text-green-400' : 'text-gray-500'}>{tracking ? 'Active GPS' : 'Inactive'}</span>
+                <span className={tracking ? 'text-slate-400' : 'text-gray-500'}>{tracking ? 'Active GPS' : 'Inactive'}</span>
               </div>
               <div className="flex justify-between text-sm">
                 <span className="text-gray-400">Last Lat</span>
@@ -95,7 +95,7 @@ const RiderDashboard: React.FC<RiderDashboardProps> = ({ rider, onUpdateStatus, 
 
           <div className="bg-white p-6 rounded-xl border shadow-sm">
              <h3 className="font-bold text-gray-800 mb-4">Earnings Today</h3>
-             <p className="text-3xl font-bold text-green-600">₹0.00</p>
+             <p className="text-3xl font-bold text-slate-600">₹0.00</p>
              <p className="text-xs text-gray-400 mt-1">0 Tasks completed</p>
           </div>
         </div>

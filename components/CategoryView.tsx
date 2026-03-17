@@ -56,7 +56,7 @@ const CategoryView: React.FC<CategoryViewProps> = ({
     return vendors.filter(v => v.categoryIds.some(id => relevantIds.includes(id))).length;
   };
 
-  const themeColor = category.themeColor || '#43A047';
+  const themeColor = category.themeColor || '#475569';
 
   return (
     <div className="min-h-screen bg-appBg">

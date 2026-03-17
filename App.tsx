@@ -173,8 +173,11 @@ const App: React.FC = () => {
   if (isLoading) {
       return (
           <div className="h-screen flex flex-col items-center justify-center bg-appBg">
-              <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
-              <p className="text-white font-bold animate-pulse text-sm uppercase tracking-widest">Dahanu Multiservice</p>
+              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6 animate-bounce">
+                <ShoppingBag className="w-10 h-10 text-primary" />
+              </div>
+              <Loader2 className="w-8 h-8 text-primary animate-spin mb-4" />
+              <p className="text-slate-800 font-bold animate-pulse text-sm uppercase tracking-widest">Dahanu Multiservice</p>
           </div>
       );
   }
@@ -224,10 +227,10 @@ const App: React.FC = () => {
                 {/* Dynamic Product Showcase - Replaced Category Grid */}
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-white font-black text-sm uppercase tracking-[0.2em] flex items-center gap-2">
-                        <div className="w-8 h-[2px] bg-yellow-400"></div> Top Picks for You
+                    <h2 className="text-slate-900 font-black text-sm uppercase tracking-[0.2em] flex items-center gap-2">
+                        <div className="w-8 h-[2px] bg-secondary"></div> Top Picks for You
                     </h2>
-                    <span className="text-[10px] font-black text-white/50 uppercase tracking-widest animate-pulse">Updates in 10s</span>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Updates in 10s</span>
                   </div>
                   
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -255,7 +258,7 @@ const App: React.FC = () => {
                                   </p>
                                   <button 
                                     onClick={() => setSelectedDeliveryVendor(item.vendor)}
-                                    className="mt-auto w-full bg-[#1a1c2e] hover:bg-primary text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-md active:scale-95"
+                                    className="mt-auto w-full bg-primary hover:bg-slate-700 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-sm active:scale-95"
                                   >
                                     <ShoppingBag className="w-3 h-3" /> Order Now
                                   </button>
@@ -263,22 +266,22 @@ const App: React.FC = () => {
                           </div>
                       ))}
                       {displayProducts.length === 0 && (
-                        <div className="col-span-full py-20 text-center text-white/50 font-bold uppercase tracking-widest text-xs border border-dashed border-white/20 rounded-3xl">
+                        <div className="col-span-full py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs border border-dashed border-slate-200 rounded-3xl">
                           Discovering fresh products...
                         </div>
                       )}
                   </div>
                 </div>
 
-                <div className="bg-white/10 backdrop-blur-md p-6 rounded-3xl border border-white/10 shadow-2xl">
+                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
                    <div className="flex justify-between items-center mb-4">
-                       <h2 className="text-xl font-bold text-white flex items-center gap-2">Logistics Fleet</h2>
+                       <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">Logistics Fleet</h2>
                        <div className="flex items-center gap-2">
-                           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                           <span className="text-[10px] font-bold text-white/60 uppercase tracking-widest">{riders.filter(r => r.status === 'ONLINE').length} Active Partners</span>
+                           <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
+                           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{riders.filter(r => r.status === 'ONLINE').length} Active Partners</span>
                        </div>
                    </div>
-                   <div className="h-72 rounded-2xl overflow-hidden border border-white/10 shadow-inner">
+                   <div className="h-72 rounded-2xl overflow-hidden border border-slate-100 shadow-inner">
                       <MapVisualizer vendors={[]} riders={riders} userLocation={null} />
                    </div>
                 </div>
@@ -356,7 +359,7 @@ const App: React.FC = () => {
         isOpen={isAuthOpen} 
         onClose={() => setAuthOpen(false)} 
         initialMode={authInitialMode}
-        onLoginSuccess={(email, role) => {
+        onLoginSuccess={(email, role, isNewUser) => {
           const newUser: User = { id: 'u' + Date.now(), name: email.split('@')[0], email, role: role as UserRole };
           setUser(newUser);
           if (role === UserRole.ADMIN) setView('ADMIN');

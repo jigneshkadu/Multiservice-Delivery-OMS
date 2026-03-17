@@ -199,9 +199,9 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                     <p className="text-xs text-orange-600 font-bold uppercase mb-1">Unassigned</p>
                     <p className="text-2xl font-black text-orange-800">{orders.filter(o => !o.riderId).length}</p>
                  </div>
-                 <div className="bg-green-50 p-4 rounded-xl border border-green-100">
-                    <p className="text-xs text-green-600 font-bold uppercase mb-1">Fleet</p>
-                    <p className="text-2xl font-black text-green-800">{onlineRiders.length}</p>
+                 <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <p className="text-xs text-slate-600 font-bold uppercase mb-1">Fleet</p>
+                    <p className="text-2xl font-black text-slate-800">{onlineRiders.length}</p>
                  </div>
                  <div className="bg-purple-50 p-4 rounded-xl border border-purple-100">
                     <p className="text-xs text-purple-600 font-bold uppercase mb-1">Partners</p>
@@ -238,8 +238,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                        </td>
                        <td className="p-4 align-top">
                           {order.riderId ? (
-                            <div className="bg-white border rounded-lg p-2 shadow-sm flex items-center gap-2 border-green-100">
-                               <div className="bg-green-100 p-1.5 rounded-full"><Bike className="w-4 h-4 text-green-600"/></div>
+                            <div className="bg-white border rounded-lg p-2 shadow-sm flex items-center gap-2 border-slate-100">
+                               <div className="bg-slate-100 p-1.5 rounded-full"><Bike className="w-4 h-4 text-slate-600"/></div>
                                <div className="min-w-0">
                                   <p className="text-xs font-bold text-gray-800 truncate">{order.riderName}</p>
                                   <p className="text-[10px] text-gray-500">{order.riderPhone}</p>

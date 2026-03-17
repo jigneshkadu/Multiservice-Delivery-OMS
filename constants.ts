@@ -7,7 +7,7 @@ export const APP_CATEGORIES: Category[] = [
     name: 'Dahanu Fresh',
     icon: 'Apple',
     description: 'Fresh fruits, vegetables and organic produce directly from farms.',
-    themeColor: '#43A047', // Green
+    themeColor: '#475569', // Slate 600
     subCategories: [
       { 
         id: 'fruits', 
@@ -184,7 +184,7 @@ export const APP_CATEGORIES: Category[] = [
     name: 'Home & Maintenance',
     icon: 'Hammer',
     description: 'Repairs, renovations, and handyman services.',
-    themeColor: '#4CAF50', // Green (Rainbow: Green)
+    themeColor: '#64748b', // Slate 500
     subCategories: [
       { 
         id: 'handyman', 
@@ -222,7 +222,7 @@ export const APP_CATEGORIES: Category[] = [
     name: 'Housekeeping',
     icon: 'SprayCan',
     description: 'Maids, cooks, and daily utility supplies.',
-    themeColor: '#009688', // Teal
+    themeColor: '#334155', // Slate 700
     subCategories: [
       { 
         id: 'domestic', 

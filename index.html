@@ -8,18 +8,20 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
       :root {
-        --primary-color: #9C27B0; 
-        --primary-shadow: rgba(156, 39, 176, 0.2);
-        --secondary-color: #FF9800; 
-        /* Match the slate bluish-grey background from the image */
-        --app-bg-color: #9293a3; 
-        --lavender-bg: #a08dae;
+        --primary: #475569; /* Slate 600 */
+        --primary-hover: #334155; /* Slate 700 */
+        --secondary: #f59e0b; /* Amber 500 */
+        --app-bg: #f8fafc; /* Slate 50 */
+        --text-main: #1e293b; /* Slate 800 */
+        --white: #ffffff;
       }
       html {
         scroll-behavior: smooth;
       }
       body {
-        background-color: var(--app-bg-color);
+        background-color: var(--app-bg);
+        color: var(--text-main);
+        font-family: 'Inter', sans-serif;
       }
       .no-scrollbar::-webkit-scrollbar {
           display: none;
@@ -28,20 +30,32 @@
           -ms-overflow-style: none;
           scrollbar-width: none;
       }
-      @import url('https://fonts.googleapis.com/css2?family=Comfortaa:wght@300;700&display=swap');
+      .modern-shadow {
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      }
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
     </style>
     <script>
       tailwind.config = {
         theme: {
           extend: {
             colors: {
-              primary: 'var(--primary-color)',
-              secondary: 'var(--secondary-color)',
-              appBg: 'var(--app-bg-color)',
-              lavender: 'var(--lavender-bg)',
+              primary: '#475569',
+              secondary: '#f59e0b',
+              appBg: '#f8fafc',
+              actionOrange: '#f97316',
+              lavender: '#8b5cf6',
+              slate: {
+                50: '#f8fafc',
+                100: '#f1f5f9',
+                200: '#e2e8f0',
+                800: '#1e293b',
+                900: '#0f172a',
+              }
             },
             fontFamily: {
-              logo: ['Comfortaa', 'cursive'],
+              sans: ['Inter', 'sans-serif'],
+              logo: ['Inter', 'sans-serif'],
             }
           }
         }
@@ -50,16 +64,20 @@
 <script type="importmap">
 {
   "imports": {
-    "firebase/": "https://esm.sh/firebase@^12.8.0/",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "react": "https://esm.sh/react@^19.2.3",
+    "firebase/app": "https://esm.sh/firebase@10.13.0/app",
+    "firebase/auth": "https://esm.sh/firebase@10.13.0/auth",
+    "firebase/analytics": "https://esm.sh/firebase@10.13.0/analytics",
+    "react/": "https://esm.sh/react@19.0.0/",
+    "react": "https://esm.sh/react@19.0.0",
     "url": "https://esm.sh/url@^0.11.4",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
-    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
-    "path": "https://esm.sh/path@^0.12.7",
+    "react-dom/": "https://esm.sh/react-dom@19.0.0/",
+    "react-dom": "https://esm.sh/react-dom@19.0.0",
     "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
-    "vite": "https://esm.sh/vite@^7.3.1"
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
+    "firebase/": "https://esm.sh/firebase@^12.9.0/",
+    "vite": "https://esm.sh/vite@^7.3.1",
+    "path": "https://esm.sh/path@^0.12.7",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4"
   }
 }
 </script>
@@ -67,6 +85,10 @@
 </head>
   <body class="font-sans antialiased text-gray-800 min-h-screen">
     <div id="root"></div>
-  <script type="module" src="/index.tsx"></script>
+    
+    <!-- This container is CRITICAL for reCAPTCHA rendering -->
+    <div id="recaptcha-container"></div>
+
+    <script type="module" src="/index.tsx"></script>
 </body>
 </html>

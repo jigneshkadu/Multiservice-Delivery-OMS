@@ -33,11 +33,11 @@ const ContactModal: React.FC<ContactModalProps> = ({ vendor, onClose, onDirectio
                 <div>
                     <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
                         {vendor.name}
-                        {vendor.isVerified && <CheckCircle className="w-5 h-5 text-green-500" />}
+                        {vendor.isVerified && <CheckCircle className="w-5 h-5 text-slate-500" />}
                     </h2>
                     <p className="text-sm text-gray-500 uppercase font-bold tracking-wider">{vendor.categoryIds[0]}</p>
                 </div>
-                <div className="bg-green-600 text-white px-2 py-1 rounded font-bold text-sm flex items-center gap-1">
+                <div className="bg-slate-600 text-white px-2 py-1 rounded font-bold text-sm flex items-center gap-1">
                     {vendor.rating} <Star className="w-3 h-3 fill-current" />
                 </div>
             </div>
@@ -58,8 +58,8 @@ const ContactModal: React.FC<ContactModalProps> = ({ vendor, onClose, onDirectio
                 </div>
 
                 <div className="flex gap-3">
-                    <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center shrink-0">
-                        <Phone className="w-5 h-5 text-green-600" />
+                    <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center shrink-0">
+                        <Phone className="w-5 h-5 text-slate-600" />
                     </div>
                     <div>
                         <p className="text-xs font-bold text-gray-400 uppercase">Phone Number</p>
