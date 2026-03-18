@@ -29,7 +29,7 @@ const BannerCarousel: React.FC<BannerCarouselProps> = ({ banners }) => {
   return (
     <div className="relative w-full bg-white shadow-sm overflow-hidden group">
       <div 
-        className="flex transition-transform duration-500 ease-in-out h-48 md:h-72"
+        className="flex transition-transform duration-500 ease-in-out h-40 md:h-72"
         style={{ transform: `translateX(-${currentIndex * 100}%)` }}
       >
         {banners.map((banner) => (

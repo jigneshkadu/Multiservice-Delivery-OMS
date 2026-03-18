@@ -17,6 +17,7 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
   const [showPayment, setShowPayment] = useState(false);
   const [lastOrderId, setLastOrderId] = useState('');
   const [viewInvoice, setViewInvoice] = useState(false);
+  const [isBasketExpanded, setIsBasketExpanded] = useState(false);
 
   if (!isOpen) return null;
 
@@ -40,7 +41,7 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
   };
 
   const totalAmount = calculateTotal();
-  const cartItemCount = Object.values(cart).reduce((a: number, b: number) => a + b, 0);
+  const cartItemCount = Object.values(cart).reduce((a: number, b: number) => a + b, 0) as number;
 
   const handleProceed = () => {
     if (totalAmount <= 0) return;
@@ -230,19 +231,28 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
             </div>
         </div>
 
-        <div className="w-full md:w-80 bg-white border-t md:border-t-0 md:border-l shadow-2xl z-20 flex flex-col">
-            <div className="p-5 bg-primary/5 border-b">
-                <h3 className="font-bold text-lg flex items-center gap-2">
-                    <ShoppingBag className="w-5 h-5" /> Your Basket
+        <div className={`w-full md:w-80 bg-white border-t md:border-t-0 md:border-l shadow-2xl z-20 flex flex-col transition-all duration-300 ${isBasketExpanded ? 'h-[70vh] md:h-full' : 'h-auto md:h-full'}`}>
+            <div 
+                className="p-4 md:p-5 bg-primary/5 border-b flex justify-between items-center cursor-pointer md:cursor-default"
+                onClick={() => window.innerWidth < 768 && setIsBasketExpanded(!isBasketExpanded)}
+            >
+                <h3 className="font-bold text-sm md:text-lg flex items-center gap-2">
+                    <ShoppingBag className="w-4 h-4 md:w-5 md:h-5" /> Your Basket
+                    {cartItemCount > 0 && (
+                        <span className="bg-primary text-white text-[10px] px-2 py-0.5 rounded-full">{cartItemCount}</span>
+                    )}
                 </h3>
+                <div className="md:hidden">
+                    {isBasketExpanded ? <Minus className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+                </div>
             </div>
             
-            <div className="flex-1 overflow-y-auto p-5 no-scrollbar">
+            <div className={`flex-1 overflow-y-auto p-4 md:p-5 no-scrollbar ${!isBasketExpanded && 'hidden md:block'}`}>
                 {cartItemCount === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-400 text-sm">
-                        <ShoppingBag className="w-12 h-12 mb-2 opacity-20" />
-                        <p>Your basket is empty</p>
-                        <p className="text-xs">Add items to place order</p>
+                    <div className="h-full py-8 md:py-0 flex flex-col items-center justify-center text-gray-400 text-sm">
+                        <ShoppingBag className="w-8 h-8 md:w-12 md:h-12 mb-2 opacity-20" />
+                        <p className="font-bold text-xs">Your basket is empty</p>
+                        <p className="text-[10px]">Add items to place order</p>
                     </div>
                 ) : (
                     <div className="space-y-3">
@@ -252,13 +262,18 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
                              if (!prod) return null;
                              return (
                                  <div key={name} className="flex gap-2 text-sm border-b pb-2 animate-fade-in">
-                                     <div className="w-12 h-12 bg-gray-100 rounded shrink-0 overflow-hidden">
+                                     <div className="w-10 h-10 md:w-12 md:h-12 bg-gray-100 rounded shrink-0 overflow-hidden">
                                         <img src={prod.image || 'https://via.placeholder.com/50'} className="w-full h-full object-cover" />
                                      </div>
                                      <div className="flex-1 min-w-0">
-                                         <span className="font-medium text-gray-800 line-clamp-1">{name}</span>
-                                         <div className="text-xs text-gray-500">{quantity} x ₹{prod.price}</div>
-                                         <div className="font-bold text-gray-700 mt-1">₹{quantity * prod.price}</div>
+                                         <span className="font-medium text-gray-800 text-xs line-clamp-1">{name}</span>
+                                         <div className="text-[10px] text-gray-500">{quantity} x ₹{prod.price}</div>
+                                         <div className="font-bold text-gray-700 mt-0.5 text-xs">₹{quantity * prod.price}</div>
+                                     </div>
+                                     <div className="flex items-center gap-2">
+                                         <button onClick={(e) => { e.stopPropagation(); handleQuantityChange(name, -1); }} className="p-1 hover:bg-gray-100 rounded"><Minus className="w-3 h-3" /></button>
+                                         <span className="text-xs font-bold">{quantity}</span>
+                                         <button onClick={(e) => { e.stopPropagation(); handleQuantityChange(name, 1); }} className="p-1 hover:bg-gray-100 rounded"><Plus className="w-3 h-3" /></button>
                                      </div>
                                  </div>
                              );
@@ -267,27 +282,29 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
                 )}
             </div>
 
-            <div className="p-5 bg-gray-50 border-t space-y-4">
-                <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600">Item Total</span>
-                    <span className="font-bold">₹{totalAmount}</span>
+            <div className={`p-4 md:p-5 bg-gray-50 border-t space-y-3 md:space-y-4 ${!isBasketExpanded && cartItemCount === 0 && 'hidden md:block'}`}>
+                <div className={`space-y-2 ${!isBasketExpanded && 'hidden md:block'}`}>
+                    <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-600">Item Total</span>
+                        <span className="font-bold">₹{totalAmount}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                        <span className="text-gray-600">Delivery Fee</span>
+                        <span className="font-bold text-slate-600">FREE</span>
+                    </div>
                 </div>
-                <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-600">Delivery Fee</span>
-                    <span className="font-bold text-slate-600">FREE</span>
-                </div>
-                <div className="border-t border-gray-200 pt-3 flex justify-between items-center text-lg font-bold text-gray-900">
+                <div className={`border-t border-gray-200 pt-2 md:pt-3 flex justify-between items-center text-base md:text-lg font-bold text-gray-900 ${!isBasketExpanded && 'hidden md:block'}`}>
                     <span>To Pay</span>
                     <span>₹{totalAmount}</span>
                 </div>
                 
                 <button 
-                    onClick={handleProceed}
+                    onClick={(e) => { e.stopPropagation(); handleProceed(); }}
                     disabled={totalAmount === 0}
-                    className="w-full bg-secondary text-white py-3 rounded-lg font-bold shadow hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition flex justify-between px-6 items-center"
+                    className="w-full bg-secondary text-white py-2.5 md:py-3 rounded-lg font-bold shadow hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition flex justify-between px-4 md:px-6 items-center"
                 >
-                    <span className="flex items-center gap-2"><CreditCard className="w-4 h-4"/> Checkout</span>
-                    <span>₹{totalAmount}</span>
+                    <span className="flex items-center gap-2 text-xs md:text-sm"><CreditCard className="w-4 h-4"/> {isBasketExpanded || window.innerWidth >= 768 ? 'Checkout' : 'View Basket'}</span>
+                    <span className="text-xs md:text-sm">₹{totalAmount}</span>
                 </button>
             </div>
         </div>
