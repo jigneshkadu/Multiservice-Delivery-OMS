@@ -111,3 +111,7 @@ export const updateOrderStatus = async (orderId: string, status: OrderStatus) =>
     return { success: true };
   }
 };
+
+export const fetchHealth = async (): Promise<{ status: string; dbConnected: boolean }> => {
+  return fetchWithFallback(`${API_BASE}/health`, { status: 'error', dbConnected: false });
+};

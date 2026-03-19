@@ -66,6 +66,7 @@
   "imports": {
     "firebase/app": "https://esm.sh/firebase@10.13.0/app",
     "firebase/auth": "https://esm.sh/firebase@10.13.0/auth",
+    "firebase/firestore": "https://esm.sh/firebase@10.13.0/firestore",
     "firebase/analytics": "https://esm.sh/firebase@10.13.0/analytics",
     "react/": "https://esm.sh/react@19.0.0/",
     "react": "https://esm.sh/react@19.0.0",
@@ -74,7 +75,6 @@
     "react-dom": "https://esm.sh/react-dom@19.0.0",
     "lucide-react": "https://esm.sh/lucide-react@^0.563.0",
     "@google/genai": "https://esm.sh/@google/genai@^1.38.0",
-    "firebase/": "https://esm.sh/firebase@^12.9.0/",
     "vite": "https://esm.sh/vite@^7.3.1",
     "path": "https://esm.sh/path@^0.12.7",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.4"
@@ -87,7 +87,7 @@
     <div id="root"></div>
     
     <!-- This container is CRITICAL for reCAPTCHA rendering -->
-    <div id="recaptcha-container"></div>
+    <div id="recaptcha-container" style="position: fixed; bottom: 0; right: 0; z-index: 9999;"></div>
 
     <script type="module" src="/index.tsx"></script>
 </body>

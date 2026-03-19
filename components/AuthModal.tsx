@@ -68,6 +68,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
 
   useEffect(() => {
     if (isOpen) {
+      // Clear any existing reCAPTCHA or OTP session when opening the modal
+      resetAuthContext();
+      
       setUserRole(initialMode);
       setViewState('INPUT');
       setIsSignUp(false);
@@ -77,7 +80,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
       setOtp('');
       setPassword('');
       setErrorInfo(null);
-      resetAuthContext();
+      
       if (initialMode === UserRole.ADMIN) {
         setAuthMethod('EMAIL');
       } else {
@@ -262,7 +265,28 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
                                     value={otp}
                                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                                 />
-                                <button onClick={() => setViewState('INPUT')} className="w-full text-xs font-bold text-slate-600 hover:underline">Change Mobile Number</button>
+                                <div className="flex flex-col gap-2">
+                                    <button 
+                                        onClick={handleAction} 
+                                        disabled={isLoading || otp.length < 6}
+                                        className="w-full bg-slate-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-slate-600/20 hover:bg-slate-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-widest disabled:opacity-50"
+                                    >
+                                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin"/> : <ShieldCheck className="w-5 h-5"/>}
+                                        Verify OTP
+                                    </button>
+                                    <div className="flex justify-between px-2">
+                                        <button onClick={() => setViewState('INPUT')} className="text-[10px] font-bold text-slate-500 hover:underline">Change Number</button>
+                                        <button 
+                                            onClick={() => {
+                                                setViewState('INPUT');
+                                                setTimeout(() => handleAction(), 100);
+                                            }} 
+                                            className="text-[10px] font-bold text-slate-600 hover:underline"
+                                        >
+                                            Resend OTP
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         )}
                     </div>
@@ -294,14 +318,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
                     </div>
                 )}
 
-                <button 
-                    onClick={handleAction}
-                    disabled={isLoading}
-                    className="w-full bg-slate-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-slate-600/20 hover:bg-slate-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-widest disabled:opacity-50"
-                >
-                    {isLoading ? <Loader2 className="w-5 h-5 animate-spin"/> : <ArrowRight className="w-5 h-5"/>}
-                    {viewState === 'OTP' ? 'Verify OTP' : 'Continue'}
-                </button>
+                {/* Hide the main button when in OTP view since we added a specific one above */}
+                {!(authMethod === 'MOBILE' && viewState === 'OTP' && userRole !== UserRole.ADMIN) && (
+                    <button 
+                        onClick={handleAction}
+                        disabled={isLoading}
+                        className="w-full bg-slate-600 text-white font-black py-4 rounded-2xl shadow-lg shadow-slate-600/20 hover:bg-slate-700 active:scale-[0.98] transition-all flex items-center justify-center gap-2 uppercase tracking-widest disabled:opacity-50"
+                    >
+                        {isLoading ? <Loader2 className="w-5 h-5 animate-spin"/> : <ArrowRight className="w-5 h-5"/>}
+                        Continue
+                    </button>
+                )}
 
                 <div className="relative py-4">
                     <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-100"></div></div>

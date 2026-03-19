@@ -4,7 +4,7 @@ import {
   User, UserRole, Vendor, Category, Banner, Order, Rider, Product
 } from './types';
 import { 
-  fetchCategories, fetchVendors, fetchBanners, createOrder, registerRider, fetchRiders, fetchAllOrders, assignRiderToOrder
+  fetchCategories, fetchVendors, fetchBanners, createOrder, registerRider, fetchRiders, fetchAllOrders, assignRiderToOrder, fetchHealth
 } from './services/api';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -39,6 +39,7 @@ const App: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [dbStatus, setDbStatus] = useState<{ status: string; dbConnected: boolean } | null>(null);
   
   const [selectedDeliveryVendor, setSelectedDeliveryVendor] = useState<Vendor | null>(null);
   const [selectedContactVendor, setSelectedContactVendor] = useState<Vendor | null>(null);
@@ -50,18 +51,20 @@ const App: React.FC = () => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const [cats, vends, bans, rids, ords] = await Promise.all([
+        const [cats, vends, bans, rids, ords, health] = await Promise.all([
           fetchCategories(),
           fetchVendors(),
           fetchBanners(),
           fetchRiders(),
-          fetchAllOrders()
+          fetchAllOrders(),
+          fetchHealth()
         ]);
         setCategories(cats);
         setVendors(vends);
         setBanners(bans);
         setRiders(rids);
         setOrders(ords);
+        setDbStatus(health);
       } catch (err: any) {
         console.error("Critical error loading data", err);
       } finally {
@@ -354,6 +357,19 @@ const App: React.FC = () => {
       </main>
 
       <Footer />
+      
+      {/* Database Connection Status Indicator */}
+      <div className="fixed bottom-20 right-4 z-50">
+        <div className={`px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-2 backdrop-blur-md border ${
+          dbStatus?.dbConnected 
+            ? 'bg-emerald-500/20 text-emerald-600 border-emerald-500/30' 
+            : 'bg-rose-500/20 text-rose-600 border-rose-500/30'
+        }`}>
+          <div className={`w-2 h-2 rounded-full ${dbStatus?.dbConnected ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`}></div>
+          {dbStatus?.dbConnected ? 'DB Connected' : 'Mock Mode (No DB)'}
+        </div>
+      </div>
+
       <BottomNav categories={categories} onCategoryClick={handleCategoryClick} />
       <AuthModal 
         isOpen={isAuthOpen} 
