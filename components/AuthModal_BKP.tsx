@@ -11,9 +11,7 @@ import {
   db,
   googleProvider, 
   appleProvider, 
-  microsoftProvider,
-  handleFirestoreError,
-  OperationType
+  microsoftProvider 
 } from "../services/firebaseConfig";
 import { 
   signInWithEmailAndPassword, 
@@ -46,11 +44,6 @@ const MicrosoftIcon = () => (
     <path fill="#ffba08" d="M12 12h10v10H12z"/>
   </svg>
 );
-
-const ADMIN_CREDENTIALS = {
-  email: 'admin@dahanu.com',
-  password: 'admin'
-};
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -100,27 +93,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
 
   const saveUserToFirestore = async (firebaseUser: any, role: UserRole) => {
     const userRef = doc(db, 'users', firebaseUser.uid);
-    try {
-      const userSnap = await getDoc(userRef);
-      
-      if (!userSnap.exists()) {
-        await setDoc(userRef, {
-          uid: firebaseUser.uid,
-          name: firebaseUser.displayName || name || 'New User',
-          email: firebaseUser.email || `${mobile}@phone.com`,
-          phone: firebaseUser.phoneNumber || mobile,
-          role: role,
-          createdAt: serverTimestamp(),
-          lastLogin: serverTimestamp()
-        });
-        return true; // isNewUser
-      } else {
-        await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
-        return false; // not new user
-      }
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `users/${firebaseUser.uid}`);
-      return false;
+    const userSnap = await getDoc(userRef);
+    
+    if (!userSnap.exists()) {
+      await setDoc(userRef, {
+        uid: firebaseUser.uid,
+        name: firebaseUser.displayName || name || 'New User',
+        email: firebaseUser.email || `${mobile}@phone.com`,
+        phone: firebaseUser.phoneNumber || mobile,
+        role: role,
+        createdAt: serverTimestamp(),
+        lastLogin: serverTimestamp()
+      });
+      return true; // isNewUser
+    } else {
+      await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
+      return false; // not new user
     }
   };
 
@@ -128,99 +116,42 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
     setIsLoading(true);
     setErrorInfo(null);
     try {
-      // Hardcoded Admin Login
-      if (userRole === UserRole.ADMIN) {
-        if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
-          onLoginSuccess(email, UserRole.ADMIN, false);
-          onClose();
-          setIsLoading(false);
-          return;
-        } else {
-          setErrorInfo({ message: "Invalid admin credentials." });
-          setIsLoading(false);
-          return;
-        }
-      }
-
       if (authMethod === 'MOBILE') {
         if (viewState === 'INPUT') {
-          if (!mobile || mobile.length < 10) {
-            setErrorInfo({ message: "Enter a valid 10-digit mobile number." });
-            setIsLoading(false);
-            return;
-          }
-
-          // If Login mode, check if user exists first
-          if (!isSignUp) {
-            // We can't easily check by phone number without a query, 
-            // but we can try to see if a user exists with this phone-based email
-            // or just proceed and check after OTP. 
-            // For now, let's check after OTP to be sure.
-          }
-
-          const result = await requestOtp(mobile);
-          if (result.success) {
-            setViewState('OTP');
-          } else {
-            setErrorInfo({ message: result.message, code: result.code });
-          }
-        } else {
-          const result = await verifyOtp(otp);
-          if (result.success) {
-            const userRef = doc(db, 'users', result.user.uid);
-            const userSnap = await getDoc(userRef);
-
-            if (!isSignUp && !userSnap.exists()) {
-              setErrorInfo({ message: "Account not found. Please sign up first." });
-              // Optionally sign out the user if they were automatically created
-              await auth.signOut();
+            if (!mobile || mobile.length < 10) {
+              setErrorInfo({message: "Enter a valid 10-digit mobile number."});
               setIsLoading(false);
               return;
             }
-
-            const isNew = await saveUserToFirestore(result.user, userRole);
-            onLoginSuccess(result.user.phoneNumber || `${mobile}@phone.com`, userRole, isNew);
-            onClose();
-          } else {
-            setErrorInfo({ message: result.message });
-          }
+            const result = await requestOtp(mobile);
+            if (result.success) {
+              setViewState('OTP');
+            } else {
+              setErrorInfo({message: result.message, code: result.code});
+            }
+        } else {
+            const result = await verifyOtp(otp);
+            if (result.success) {
+                const isNew = await saveUserToFirestore(result.user, userRole);
+                onLoginSuccess(result.user.phoneNumber || `${mobile}@phone.com`, userRole, isNew);
+                onClose();
+            } else {
+                setErrorInfo({message: result.message});
+            }
         }
-      }
+      } 
       else if (authMethod === 'EMAIL') {
-        if (isSignUp) {
-          const userCred = await createUserWithEmailAndPassword(auth, email, password);
-          if (name && userCred.user) await updateProfile(userCred.user, { displayName: name });
-          const isNew = await saveUserToFirestore(userCred.user, userRole);
-          onLoginSuccess(userCred.user.email!, userRole, isNew);
-        } else {
-          // Check if user exists in Firestore first for "Login"
-          // This is a bit tricky with just email, but we can try to sign in 
-          // and then check Firestore, or check Firestore first if we have a way to map email to UID.
-          // Firebase Auth signIn will fail if user doesn't exist in Auth.
-          try {
-            const userCred = await signInWithEmailAndPassword(auth, email, password);
-            const userRef = doc(db, 'users', userCred.user.uid);
-            const userSnap = await getDoc(userRef);
-
-            if (!userSnap.exists()) {
-              setErrorInfo({ message: "Account not found in database. Please sign up." });
-              await auth.signOut();
-              setIsLoading(false);
-              return;
-            }
-
-            const isNew = await saveUserToFirestore(userCred.user, userRole);
-            onLoginSuccess(userCred.user.email!, userRole, isNew);
-          } catch (err: any) {
-            if (err.code === 'auth/user-not-found') {
-              setErrorInfo({ message: "Account not found. Please sign up first." });
-              setIsLoading(false);
-              return;
-            }
-            throw err;
+          if (isSignUp) {
+              const userCred = await createUserWithEmailAndPassword(auth, email, password);
+              if (name && userCred.user) await updateProfile(userCred.user, { displayName: name });
+              const isNew = await saveUserToFirestore(userCred.user, userRole);
+              onLoginSuccess(userCred.user.email!, userRole, isNew);
+          } else {
+              const userCred = await signInWithEmailAndPassword(auth, email, password);
+              const isNew = await saveUserToFirestore(userCred.user, userRole);
+              onLoginSuccess(userCred.user.email!, userRole, isNew);
           }
-        }
-        onClose();
+          onClose();
       }
     } catch (error: any) {
       console.error(error);
@@ -240,18 +171,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
       else provider = microsoftProvider;
 
       const result = await signInWithPopup(auth, provider);
-      
-      // For social login, if it's not signup mode, check if user exists
-      const userRef = doc(db, 'users', result.user.uid);
-      const userSnap = await getDoc(userRef);
-      
-      if (!isSignUp && !userSnap.exists()) {
-        setErrorInfo({ message: "Account not found. Please sign up first using this social account." });
-        await auth.signOut();
-        setIsLoading(false);
-        return;
-      }
-
       const isNew = await saveUserToFirestore(result.user, userRole);
       onLoginSuccess(result.user.email!, userRole, isNew);
       onClose();
@@ -325,27 +244,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
                 {authMethod === 'MOBILE' && userRole !== UserRole.ADMIN ? (
                     <div className="space-y-4">
                         {viewState === 'INPUT' ? (
-                            <div className="space-y-4">
-                                {isSignUp && (
-                                    <input 
-                                        type="text" 
-                                        className="w-full border-2 border-slate-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-slate-500/10 focus:border-slate-500 outline-none font-medium text-slate-800"
-                                        placeholder="Full Name"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                    />
-                                )}
-                                <div className="relative">
-                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold border-r border-slate-200 pr-3">+91</span>
-                                    <input 
-                                        type="tel" 
-                                        className="w-full border-2 rounded-2xl py-4 pl-16 pr-6 focus:ring-4 focus:ring-slate-500/10 border-slate-100 focus:border-slate-500 outline-none transition-all font-bold text-slate-800"
-                                        placeholder="Mobile Number"
-                                        value={mobile}
-                                        maxLength={10}
-                                        onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
-                                    />
-                                </div>
+                            <div className="relative">
+                                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold border-r border-slate-200 pr-3">+91</span>
+                                <input 
+                                    type="tel" 
+                                    className="w-full border-2 rounded-2xl py-4 pl-16 pr-6 focus:ring-4 focus:ring-slate-500/10 border-slate-100 focus:border-slate-500 outline-none transition-all font-bold text-slate-800"
+                                    placeholder="Mobile Number"
+                                    value={mobile}
+                                    maxLength={10}
+                                    onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
+                                />
                             </div>
                         ) : (
                             <div className="space-y-4">
@@ -462,14 +370,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
                 </div>
 
                 <div className="text-center mt-6">
-                    {userRole !== UserRole.ADMIN && (
-                        <button onClick={() => setIsSignUp(!isSignUp)} className="text-sm font-bold text-slate-500 hover:text-slate-600 transition">
-                            {isSignUp ? 'Already have an account? Log In' : "Don't have an account? Sign Up"}
-                        </button>
-                    )}
-                    {userRole === UserRole.ADMIN && (
-                        <p className="text-xs text-slate-400 font-medium">Use system administrator credentials to access the panel.</p>
-                    )}
+                    <button onClick={() => setIsSignUp(!isSignUp)} className="text-sm font-bold text-slate-500 hover:text-slate-600 transition">
+                      {isSignUp ? 'Already have an account? Log In' : "Don't have an account? Sign Up"}
+                    </button>
                 </div>
             </div>
         </div>
