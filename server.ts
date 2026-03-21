@@ -128,8 +128,14 @@ async function startServer() {
     } catch (err: any) { res.status(500).json({ error: err.message }); }
   });
 
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== 'production') {
+  // Root route for backend
+  app.get('/', (req, res) => {
+    res.send('Dahanu Backend API is running. Use /api/health to check status.');
+  });
+
+  // Vite middleware for development (only if not on Cloud Run)
+  const isCloudRun = !!process.env.K_SERVICE;
+  if (process.env.NODE_ENV !== 'production' && !isCloudRun) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
