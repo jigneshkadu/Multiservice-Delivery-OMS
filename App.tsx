@@ -48,6 +48,9 @@ const App: React.FC = () => {
   const [productBatchIndex, setProductBatchIndex] = useState(0);
 
   useEffect(() => {
+    console.log("Dahanu App Initializing...");
+    console.log("API Base URL:", import.meta.env.VITE_API_URL || '/api');
+
     const loadData = async () => {
       setIsLoading(true);
       try {

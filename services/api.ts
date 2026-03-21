@@ -1,8 +1,9 @@
 
 import { Order, OrderStatus, Vendor, Category, Banner, Rider, DeliveryTask } from '../types';
 import { APP_CATEGORIES, MOCK_VENDORS, INITIAL_BANNERS, MOCK_ORDERS } from '../constants';
+import { checkFirestoreConnection } from './firebaseConfig';
 
-const API_BASE = '/api';
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 async function fetchWithFallback<T>(url: string, fallbackData: T): Promise<T> {
   try {
@@ -10,6 +11,7 @@ async function fetchWithFallback<T>(url: string, fallbackData: T): Promise<T> {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
     return await response.json();
   } catch (error) {
+    console.warn(`Fetch failed for ${url}:`, error);
     return fallbackData;
   }
 }
@@ -113,5 +115,17 @@ export const updateOrderStatus = async (orderId: string, status: OrderStatus) =>
 };
 
 export const fetchHealth = async (): Promise<{ status: string; dbConnected: boolean }> => {
-  return fetchWithFallback(`${API_BASE}/health`, { status: 'error', dbConnected: false });
+  try {
+    console.log("Checking health at:", `${API_BASE}/health`);
+    const response = await fetch(`${API_BASE}/health`);
+    if (!response.ok) throw new Error(`Health check failed with status: ${response.status}`);
+    const data = await response.json();
+    console.log("Health check response:", data);
+    return data;
+  } catch (error) {
+    console.error("Backend health check error:", error);
+    // Fallback to firestore check only if backend fails
+    const dbConnected = await checkFirestoreConnection();
+    return { status: 'error', dbConnected };
+  }
 };
