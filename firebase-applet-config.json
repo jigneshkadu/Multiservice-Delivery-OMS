@@ -1,10 +1,10 @@
 {
   "projectId": "dahanu-multiservice",
-  "appId": "1:862029711178:web:df7c504c69d9c4a04de3b3",
-  "apiKey": "AIzaSyBcmusB4vLXIOH0Soyf9fzS4G8tyshWGo8",
+  "appId": "1:862029711178:web:aa9a888fdb5227484de3b3",
+  "apiKey": "AIzaSyDSLGv0nMDApj5YjfL2FudbN8HpYi02R3k",
   "authDomain": "dahanu-multiservice.firebaseapp.com",
-  "firestoreDatabaseId": "(default)",
+  "firestoreDatabaseId": "ai-studio-141b382c-cab9-4994-9547-c35b806b8ec6",
   "storageBucket": "dahanu-multiservice.firebasestorage.app",
   "messagingSenderId": "862029711178",
-  "measurementId": "G-0Y2EXHFLFC"
+  "measurementId": ""
 }
