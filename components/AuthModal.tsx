@@ -74,6 +74,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [errorInfo, setErrorInfo] = useState<{message: string, code?: string} | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -91,6 +92,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
       setOtp('');
       setPassword('');
       setErrorInfo(null);
+      setSuccessMessage(null);
       
       if (initialMode === UserRole.ADMIN) {
         setAuthMethod('EMAIL');
@@ -114,7 +116,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
         await setDoc(userRef, {
           uid: firebaseUser.uid,
           name: firebaseUser.displayName || name || 'New User',
-          email: firebaseUser.email || `${mobile}@phone.com`,
+          email: firebaseUser.email || email || `${mobile}@phone.com`,
           phone: firebaseUser.phoneNumber || mobile,
           address: address || '',
           role: finalRole,
@@ -126,6 +128,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
         // Even if user exists, ensure the role is updated if it's the special UID
         await setDoc(userRef, { 
           lastLogin: serverTimestamp(),
+          email: firebaseUser.email || email || userSnap.data()?.email,
+          phone: firebaseUser.phoneNumber || mobile || userSnap.data()?.phone,
+          address: address || userSnap.data()?.address,
           role: finalRole 
         }, { merge: true });
         return { isNew: false, finalRole };
@@ -137,8 +142,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
   };
 
   const handleAction = async () => {
+    if (isLoading) return;
     setIsLoading(true);
     setErrorInfo(null);
+    setSuccessMessage(null);
     try {
       // Hardcoded Admin Login
       if (userRole === UserRole.ADMIN) {
@@ -162,12 +169,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
             return;
           }
 
-          // If Login mode, check if user exists first
-          if (!isSignUp) {
-            // We can't easily check by phone number without a query, 
-            // but we can try to see if a user exists with this phone-based email
-            // or just proceed and check after OTP. 
-            // For now, let's check after OTP to be sure.
+          if (isSignUp && !email) {
+            setErrorInfo({ message: "Email address is required for sign up." });
+            setIsLoading(false);
+            return;
           }
 
           const result = await requestOtp(mobile);
@@ -191,8 +196,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
             }
 
             const { isNew, finalRole } = await saveUserToFirestore(result.user, userRole);
-            onLoginSuccess(result.user.phoneNumber || `${mobile}@phone.com`, finalRole, isNew);
-            onClose();
+            
+            if (isSignUp) {
+              setSuccessMessage("Sign up successful! Please log in with your mobile number.");
+              setIsSignUp(false);
+              setViewState('INPUT');
+              setOtp('');
+              await auth.signOut();
+            } else {
+              onLoginSuccess(result.user.phoneNumber || `${mobile}@phone.com`, finalRole, isNew);
+              onClose();
+            }
           } else {
             setErrorInfo({ message: result.message });
           }
@@ -202,8 +216,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
         if (isSignUp) {
           const userCred = await createUserWithEmailAndPassword(auth, email, password);
           if (name && userCred.user) await updateProfile(userCred.user, { displayName: name });
-          const { isNew, finalRole } = await saveUserToFirestore(userCred.user, userRole);
-          onLoginSuccess(userCred.user.email!, finalRole, isNew);
+          await saveUserToFirestore(userCred.user, userRole);
+          
+          setSuccessMessage("Account created successfully! Please log in with your credentials.");
+          setIsSignUp(false);
+          setPassword('');
+          await auth.signOut();
         } else {
           // Check if user exists in Firestore first for "Login"
           // This is a bit tricky with just email, but we can try to sign in 
@@ -326,6 +344,29 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
                 <p className="text-slate-500 text-sm font-medium">Access your multiservice dashboard</p>
             </div>
 
+            {/* Tabs for Login/Signup */}
+            <div className="flex bg-slate-100 p-1 rounded-2xl mb-8">
+              <button 
+                onClick={() => { setIsSignUp(false); setErrorInfo(null); setSuccessMessage(null); }}
+                className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${!isSignUp ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Log In
+              </button>
+              <button 
+                onClick={() => { setIsSignUp(true); setErrorInfo(null); setSuccessMessage(null); }}
+                className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-widest transition-all ${isSignUp ? 'bg-white text-primary shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+              >
+                Sign Up
+              </button>
+            </div>
+
+            {successMessage && (
+              <div className="mb-6 p-4 bg-emerald-50 border-l-4 border-emerald-500 rounded-r-xl flex items-start gap-3 animate-fade-in">
+                <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                <p className="text-xs font-bold text-emerald-700 leading-relaxed">{successMessage}</p>
+              </div>
+            )}
+
             {errorInfo && (
               <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl flex flex-col gap-3">
                 <div className="flex items-start gap-3">
@@ -376,6 +417,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
                                             rows={2}
                                             value={address}
                                             onChange={(e) => setAddress(e.target.value)}
+                                        />
+                                        <input 
+                                            type="email" 
+                                            className="w-full border-2 border-slate-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-slate-500/10 focus:border-slate-500 outline-none font-medium text-slate-800"
+                                            placeholder="Email Address"
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
                                         />
                                     </div>
                                 )}
@@ -514,15 +562,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
                     </button>
                 </div>
 
-                <div className="text-center mt-6">
-                    {userRole !== UserRole.ADMIN && (
-                        <button onClick={() => setIsSignUp(!isSignUp)} className="text-sm font-bold text-slate-500 hover:text-slate-600 transition">
-                            {isSignUp ? 'Already have an account? Log In' : "Don't have an account? Sign Up"}
-                        </button>
-                    )}
-                    {userRole === UserRole.ADMIN && (
-                        <p className="text-xs text-slate-400 font-medium">Use system administrator credentials to access the panel.</p>
-                    )}
+                <div className="text-center mt-8 pt-6 border-t border-slate-100">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                        Dahanu Multiservice Platform
+                    </p>
                 </div>
             </div>
         </div>

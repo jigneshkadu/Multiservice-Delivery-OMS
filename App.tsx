@@ -202,7 +202,6 @@ const App: React.FC = () => {
         onClose={() => setIsMenuOpen(false)}
         user={user}
         onLogin={(role) => openLogin(role || UserRole.USER, false)}
-        onSignup={() => openLogin(UserRole.USER, true)}
         onLogout={() => { setUser(null); setActiveRider(null); setView('HOME'); }}
         onAdminClick={() => openLogin(UserRole.ADMIN, false)}
         onRiderClick={() => setView('RIDER_REG')}
@@ -211,7 +210,6 @@ const App: React.FC = () => {
       <Header 
         user={user}
         onLoginClick={() => openLogin(UserRole.USER, false)}
-        onSignupClick={() => openLogin(UserRole.USER, true)}
         onLogoutClick={() => setUser(null)}
         onMenuClick={() => setIsMenuOpen(true)}
         onAdminClick={() => openLogin(UserRole.ADMIN, false)}

@@ -8,14 +8,13 @@ interface SideMenuProps {
   onClose: () => void;
   user: User | null;
   onLogin: (role?: UserRole) => void;
-  onSignup: () => void;
   onLogout: () => void;
   onAdminClick: () => void;
   onRiderClick: () => void; 
   onVendorRegClick: () => void;
 }
 
-const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user, onLogin, onSignup, onLogout, onAdminClick, onRiderClick, onVendorRegClick }) => {
+const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user, onLogin, onLogout, onAdminClick, onRiderClick, onVendorRegClick }) => {
   return (
     <>
       {/* Backdrop */}
@@ -99,11 +98,8 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user, onLogin, onS
                         </button>
                     ) : (
                         <div className="space-y-2">
-                            <button onClick={() => { onLogin(UserRole.USER); onClose(); }} className="w-full text-left px-4 py-3 hover:bg-primary/5 rounded-xl flex items-center gap-3 text-sm text-primary font-bold transition-colors">
-                               <LogIn className="w-4 h-4" /> Member Login
-                            </button>
-                            <button onClick={() => { onSignup(); onClose(); }} className="w-full text-left px-4 py-3 bg-primary text-white rounded-xl flex items-center gap-3 text-sm font-bold transition-all hover:bg-slate-700 active:scale-95">
-                               <UserPlus className="w-4 h-4" /> Create New Account
+                            <button onClick={() => { onLogin(UserRole.USER); onClose(); }} className="w-full text-left px-4 py-4 bg-primary text-white rounded-2xl flex items-center gap-3 text-sm font-black transition-all hover:bg-slate-700 active:scale-95 shadow-lg shadow-primary/20">
+                               <LogIn className="w-4 h-4" /> Member Login / Sign Up
                             </button>
                         </div>
                     )}
