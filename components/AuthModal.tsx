@@ -5,7 +5,7 @@ import {
   Building2, Apple, AlertCircle, ExternalLink, Settings, 
   HelpCircle, Mail, Phone, Smartphone
 } from 'lucide-react';
-import { requestOtp, verifyOtp, resetAuthContext } from '../services/otpService';
+import { requestOtp, verifyOtp, resetAuthContext, clearVerifier } from '../services/otpService';
 import { 
   auth, 
   db,
@@ -77,6 +77,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
     if (isOpen) {
       // Clear any existing reCAPTCHA or OTP session when opening the modal
       resetAuthContext();
+      clearVerifier(); // Ensure a fresh reCAPTCHA state
       
       setUserRole(initialMode);
       setViewState('INPUT');

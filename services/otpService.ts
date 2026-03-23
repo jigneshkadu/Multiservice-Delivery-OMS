@@ -14,23 +14,32 @@ declare global {
 }
 
 /**
- * Resets the confirmation result and clears the verifier to prevent "already rendered" errors.
+ * Resets only the OTP confirmation result, keeping the reCAPTCHA verifier alive.
  */
 export const resetAuthContext = () => {
   window.confirmationResult = undefined;
+  console.log("Auth context reset (confirmation result cleared)");
+};
+
+/**
+ * Completely clears the reCAPTCHA verifier. Use this only on fatal errors.
+ */
+export const clearVerifier = () => {
+  console.log('Clearing reCAPTCHA verifier...');
   if (window.recaptchaVerifier) {
     try {
       window.recaptchaVerifier.clear();
       window.recaptchaVerifier = undefined;
+      const container = document.getElementById('recaptcha-container');
+      if (container) {
+        container.innerHTML = '';
+        console.log("reCAPTCHA container cleared and destroyed");
+      }
+      console.log("reCAPTCHA verifier cleared successfully");
     } catch (e) {
       console.warn("Error clearing reCAPTCHA verifier:", e);
+      window.recaptchaVerifier = undefined;
     }
-  }
-  
-  // Also clear the container HTML just in case
-  const container = document.getElementById('recaptcha-container');
-  if (container) {
-    container.innerHTML = '';
   }
 };
 
@@ -38,42 +47,37 @@ export const resetAuthContext = () => {
  * Initializes the RecaptchaVerifier as a singleton.
  */
 const initVerifier = () => {
-  // Debug log to help user verify their config
-  console.log("Initializing reCAPTCHA for Project:", auth.config.apiKey.substring(0, 10) + "...");
-
-  // If it already exists, use it.
+  console.log('Initializing reCAPTCHA verifier...');
+  console.log(`Current domain: ${window.location.hostname}`);
+  // Reuse existing verifier if it's already initialized
   if (window.recaptchaVerifier) {
+    console.log('Reusing existing reCAPTCHA verifier');
     return window.recaptchaVerifier;
   }
 
   const container = document.getElementById('recaptcha-container');
   if (!container) {
-    console.error("Recaptcha container not found in DOM");
+    console.error("Recaptcha container not found in DOM! Make sure index.html has <div id=\"recaptcha-container\"></div>");
     return null;
   }
 
-  // Ensure container is clean
-  container.innerHTML = '';
-  
   try {
     const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
       'size': 'invisible',
-      'callback': () => {
-        console.log("reCAPTCHA solved");
+      'callback': (response: any) => {
+        console.log("reCAPTCHA solved successfully", response ? "Token received" : "No token");
       },
       'expired-callback': () => {
-        console.warn("reCAPTCHA expired");
-        resetAuthContext();
+        console.warn("reCAPTCHA expired, clearing verifier...");
+        clearVerifier();
       }
     });
     
     window.recaptchaVerifier = verifier;
+    console.log('reCAPTCHA verifier initialized successfully');
     return verifier;
   } catch (error: any) {
     console.error("RecaptchaVerifier initialization failed:", error);
-    // If it's already rendered, we might have a global state issue.
-    // Try to reset and return null so the caller can handle it.
-    resetAuthContext();
     return null;
   }
 };
@@ -85,20 +89,12 @@ export const requestOtp = async (
   phoneNumber: string
 ): Promise<{ success: boolean; message: string; code?: string }> => {
   try {
-    // Don't reset the whole context, just the confirmation result
+    // Clear previous session but keep the verifier
     resetAuthContext();
     
     const verifier = initVerifier();
     if (!verifier) {
-      return { success: false, message: 'Security verification failed to initialize.' };
-    }
-
-    // Explicitly render the verifier to ensure it's ready
-    try {
-      await verifier.render();
-      console.log("reCAPTCHA verifier rendered successfully");
-    } catch (renderError) {
-      console.warn("reCAPTCHA render warning (might already be rendered):", renderError);
+      return { success: false, message: 'Security verification failed to initialize. Please refresh.' };
     }
 
     const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber}`;
@@ -107,35 +103,40 @@ export const requestOtp = async (
     const result = await signInWithPhoneNumber(auth, formattedPhone, verifier);
     window.confirmationResult = result;
     
-    console.log("SMS request accepted by Firebase. Waiting for delivery...");
-    return { success: true, message: 'OTP sent successfully!' };
+    console.log("SMS request accepted by Firebase. Awaiting user input...");
+    return { success: true, message: 'OTP sent successfully! Please check your mobile.' };
   } catch (error: any) {
     console.error('Phone Auth Request Error:', error);
-    // ... rest of the error handling remains the same
     
     const errorCode = error.code || '';
     const rawMessage = error.message || '';
-    let errorMessage = `Security check failed: ${rawMessage} (${errorCode})`;
+    let errorMessage = `Failed to send OTP: ${rawMessage} (${errorCode})`;
 
     if (errorCode === 'auth/internal-error') {
-      errorMessage = 'Internal Error: Please ensure your domain is authorized and Phone Auth is configured correctly in Firebase Console.';
+      errorMessage = 'Firebase internal error. This often happens if Phone Auth is not enabled or the domain is not authorized.';
     } else if (errorCode === 'auth/unauthorized-domain') {
-      errorMessage = `This domain (${window.location.hostname}) is not authorized for authentication. Please add it to the Authorized Domains in Firebase Console.`;
+      errorMessage = `Domain (${window.location.hostname}) is not authorized in your Firebase Console. Please add it to Authentication > Settings > Authorized domains.`;
     } else if (errorCode === 'auth/operation-not-allowed') {
-      errorMessage = 'Phone Authentication is not enabled in your Firebase Console. Please enable it under Authentication > Sign-in method.';
+      errorMessage = 'Phone Authentication is DISABLED in your Firebase Console. Please enable it under Authentication > Sign-in method.';
     } else if (errorCode === 'auth/too-many-requests') {
-      errorMessage = 'Too many attempts. Please try again later.';
+      errorMessage = 'Too many attempts from this device/number. Please wait a few minutes or try a different number.';
     } else if (errorCode === 'auth/invalid-phone-number') {
-      errorMessage = 'The phone number provided is not valid.';
-    } else if (errorCode === 'auth/captcha-check-failed') {
-      errorMessage = 'reCAPTCHA verification failed. Please try again.';
+      errorMessage = 'The phone number format is invalid. Please enter a 10-digit number.';
+    } else if (errorCode === 'auth/quota-exceeded') {
+      errorMessage = 'SMS quota for this project has been exceeded. Please check your Firebase billing/usage.';
     } else if (rawMessage.includes('already been rendered')) {
-      errorMessage = 'reCAPTCHA error. Please refresh the page and try again.';
-      resetAuthContext();
+      errorMessage = 'Security check is already active. Please wait a moment and try again.';
+    } else if (rawMessage.includes('reCAPTCHA') || errorCode.includes('captcha')) {
+      errorMessage = 'Security verification (reCAPTCHA) failed. Please ensure your domain is authorized in Firebase Console and you are not blocking scripts. If the error persists, please refresh the page.';
+      console.error('reCAPTCHA specific error detected:', rawMessage, errorCode);
     }
 
-    // On error, clear the context to try fresh next time
-    resetAuthContext();
+    console.warn(`User-friendly error: ${errorMessage}`);
+
+    // On fatal reCAPTCHA errors, we clear it to allow a fresh start
+    if (rawMessage.includes('reCAPTCHA') || errorCode.includes('captcha')) {
+      clearVerifier();
+    }
     
     return { 
       success: false, 
