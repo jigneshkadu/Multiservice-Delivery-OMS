@@ -26,20 +26,22 @@ export const resetAuthContext = () => {
  */
 export const clearVerifier = () => {
   console.log('Clearing reCAPTCHA verifier...');
+  
   if (window.recaptchaVerifier) {
     try {
       window.recaptchaVerifier.clear();
-      window.recaptchaVerifier = undefined;
-      const container = document.getElementById('recaptcha-container');
-      if (container) {
-        container.innerHTML = '';
-        console.log("reCAPTCHA container cleared and destroyed");
-      }
-      console.log("reCAPTCHA verifier cleared successfully");
+      console.log("reCAPTCHA verifier instance cleared");
     } catch (e) {
-      console.warn("Error clearing reCAPTCHA verifier:", e);
-      window.recaptchaVerifier = undefined;
+      console.warn("Error clearing reCAPTCHA verifier instance:", e);
     }
+    window.recaptchaVerifier = undefined;
+  }
+
+  // ALWAYS clear the container HTML to prevent "already rendered" errors
+  const container = document.getElementById('recaptcha-container');
+  if (container) {
+    container.innerHTML = '';
+    console.log("reCAPTCHA container HTML cleared");
   }
 };
 
@@ -89,12 +91,19 @@ export const requestOtp = async (
   phoneNumber: string
 ): Promise<{ success: boolean; message: string; code?: string }> => {
   try {
-    // Clear previous session but keep the verifier
+    console.log(`Requesting OTP for ${phoneNumber}...`);
+    
+    // CRITICAL: Always clear any existing verifier before a new request
+    // to prevent "Security check is already active" or "already rendered" errors.
+    clearVerifier();
     resetAuthContext();
     
+    // Give the DOM a tiny moment to clear if needed
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     const verifier = initVerifier();
     if (!verifier) {
-      return { success: false, message: 'Security verification failed to initialize. Please refresh.' };
+      return { success: false, message: 'Security verification failed to initialize. Please refresh the page.' };
     }
 
     const formattedPhone = phoneNumber.startsWith('+') ? phoneNumber : `+91${phoneNumber}`;
@@ -108,6 +117,9 @@ export const requestOtp = async (
   } catch (error: any) {
     console.error('Phone Auth Request Error:', error);
     
+    // Clear verifier on ANY error to allow a clean retry
+    clearVerifier();
+    
     const errorCode = error.code || '';
     const rawMessage = error.message || '';
     let errorMessage = `Failed to send OTP: ${rawMessage} (${errorCode})`;
@@ -119,24 +131,18 @@ export const requestOtp = async (
     } else if (errorCode === 'auth/operation-not-allowed') {
       errorMessage = 'Phone Authentication is DISABLED in your Firebase Console. Please enable it under Authentication > Sign-in method.';
     } else if (errorCode === 'auth/too-many-requests') {
-      errorMessage = 'Too many attempts from this device/number. Please wait a few minutes or try a different number.';
+      errorMessage = 'Too many attempts. Please wait a few minutes or try a different number.';
     } else if (errorCode === 'auth/invalid-phone-number') {
       errorMessage = 'The phone number format is invalid. Please enter a 10-digit number.';
     } else if (errorCode === 'auth/quota-exceeded') {
-      errorMessage = 'SMS quota for this project has been exceeded. Please check your Firebase billing/usage.';
-    } else if (rawMessage.includes('already been rendered')) {
-      errorMessage = 'Security check is already active. Please wait a moment and try again.';
+      errorMessage = 'SMS quota for this project has been exceeded. Please check your Firebase billing.';
+    } else if (rawMessage.includes('already been rendered') || rawMessage.includes('already active')) {
+      errorMessage = 'Security check was already active. We have reset it, please try clicking Continue again.';
     } else if (rawMessage.includes('reCAPTCHA') || errorCode.includes('captcha')) {
-      errorMessage = 'Security verification (reCAPTCHA) failed. Please ensure your domain is authorized in Firebase Console and you are not blocking scripts. If the error persists, please refresh the page.';
-      console.error('reCAPTCHA specific error detected:', rawMessage, errorCode);
+      errorMessage = 'Security verification (reCAPTCHA) failed. Please ensure your domain is authorized and you are not blocking scripts.';
     }
 
     console.warn(`User-friendly error: ${errorMessage}`);
-
-    // On fatal reCAPTCHA errors, we clear it to allow a fresh start
-    if (rawMessage.includes('reCAPTCHA') || errorCode.includes('captcha')) {
-      clearVerifier();
-    }
     
     return { 
       success: false, 
