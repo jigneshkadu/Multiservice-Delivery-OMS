@@ -14,18 +14,26 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Services
 export const auth = getAuth(app);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const db = (firebaseConfig as any).firestoreDatabaseId && (firebaseConfig as any).firestoreDatabaseId !== '(default)'
+  ? getFirestore(app, (firebaseConfig as any).firestoreDatabaseId)
+  : getFirestore(app);
 
 /**
  * Validates connection to Firestore.
  */
 export const checkFirestoreConnection = async (): Promise<boolean> => {
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
+    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000));
+    await Promise.race([
+      getDocFromServer(doc(db, 'test', 'connection')),
+      timeoutPromise
+    ]);
     return true;
   } catch (error) {
     if(error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Firestore Error: Please check your Firebase configuration. The client is offline.");
+      console.error("Firestore Error: Please check your Firebase configuration. The client is offline. This usually means the Database ID or Project ID is incorrect.");
+    } else if (error instanceof Error && error.message === 'timeout') {
+      console.error("Firestore Error: Connection timed out.");
     }
     return false;
   }

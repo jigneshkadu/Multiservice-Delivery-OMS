@@ -103,24 +103,31 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
     try {
       const userSnap = await getDoc(userRef);
       
+      // Auto-assign ADMIN role to the specific UID provided by the user
+      const finalRole = firebaseUser.uid === "iWIFwcoiAHNCY5G12CV2DIRFfGO2" ? UserRole.ADMIN : role;
+
       if (!userSnap.exists()) {
         await setDoc(userRef, {
           uid: firebaseUser.uid,
           name: firebaseUser.displayName || name || 'New User',
           email: firebaseUser.email || `${mobile}@phone.com`,
           phone: firebaseUser.phoneNumber || mobile,
-          role: role,
+          role: finalRole,
           createdAt: serverTimestamp(),
           lastLogin: serverTimestamp()
         });
-        return true; // isNewUser
+        return { isNew: true, finalRole };
       } else {
-        await setDoc(userRef, { lastLogin: serverTimestamp() }, { merge: true });
-        return false; // not new user
+        // Even if user exists, ensure the role is updated if it's the special UID
+        await setDoc(userRef, { 
+          lastLogin: serverTimestamp(),
+          role: finalRole 
+        }, { merge: true });
+        return { isNew: false, finalRole };
       }
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `users/${firebaseUser.uid}`);
-      return false;
+      return { isNew: false, finalRole: role };
     }
   };
 
@@ -178,8 +185,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
               return;
             }
 
-            const isNew = await saveUserToFirestore(result.user, userRole);
-            onLoginSuccess(result.user.phoneNumber || `${mobile}@phone.com`, userRole, isNew);
+            const { isNew, finalRole } = await saveUserToFirestore(result.user, userRole);
+            onLoginSuccess(result.user.phoneNumber || `${mobile}@phone.com`, finalRole, isNew);
             onClose();
           } else {
             setErrorInfo({ message: result.message });
@@ -190,8 +197,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
         if (isSignUp) {
           const userCred = await createUserWithEmailAndPassword(auth, email, password);
           if (name && userCred.user) await updateProfile(userCred.user, { displayName: name });
-          const isNew = await saveUserToFirestore(userCred.user, userRole);
-          onLoginSuccess(userCred.user.email!, userRole, isNew);
+          const { isNew, finalRole } = await saveUserToFirestore(userCred.user, userRole);
+          onLoginSuccess(userCred.user.email!, finalRole, isNew);
         } else {
           // Check if user exists in Firestore first for "Login"
           // This is a bit tricky with just email, but we can try to sign in 
@@ -209,8 +216,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
               return;
             }
 
-            const isNew = await saveUserToFirestore(userCred.user, userRole);
-            onLoginSuccess(userCred.user.email!, userRole, isNew);
+            const { isNew, finalRole } = await saveUserToFirestore(userCred.user, userRole);
+            onLoginSuccess(userCred.user.email!, finalRole, isNew);
           } catch (err: any) {
             if (err.code === 'auth/user-not-found') {
               setErrorInfo({ message: "Account not found. Please sign up first." });
@@ -252,8 +259,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
         return;
       }
 
-      const isNew = await saveUserToFirestore(result.user, userRole);
-      onLoginSuccess(result.user.email!, userRole, isNew);
+      const { isNew, finalRole } = await saveUserToFirestore(result.user, userRole);
+      onLoginSuccess(result.user.email!, finalRole, isNew);
       onClose();
     } catch (error: any) {
       setErrorInfo({message: error.message, code: error.code});
@@ -315,9 +322,32 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
             </div>
 
             {errorInfo && (
-              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
-                <p className="text-xs font-bold text-red-700 leading-relaxed">{errorInfo.message}</p>
+              <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-r-xl flex flex-col gap-3">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                  <p className="text-xs font-bold text-red-700 leading-relaxed">{errorInfo.message}</p>
+                </div>
+                {errorInfo.message.includes('client is offline') && (
+                  <div className="mt-2 p-3 bg-white/50 rounded-lg border border-red-100">
+                    <p className="text-[10px] text-red-800 font-medium">
+                      <strong>How to fix:</strong> This usually means your Firestore Database ID is incorrect. Please check if your database is the <code>(default)</code> one or has a custom ID.
+                    </p>
+                  </div>
+                )}
+                {errorInfo.code === 'auth/operation-not-allowed' && (
+                  <div className="mt-2 p-3 bg-white/50 rounded-lg border border-red-100">
+                    <p className="text-[10px] text-red-800 font-medium">
+                      <strong>How to fix:</strong> Go to Firebase Console &gt; Authentication &gt; Sign-in method &gt; Add new provider &gt; Phone &gt; Enable.
+                    </p>
+                  </div>
+                )}
+                {errorInfo.code === 'auth/unauthorized-domain' && (
+                  <div className="mt-2 p-3 bg-white/50 rounded-lg border border-red-100">
+                    <p className="text-[10px] text-red-800 font-medium">
+                      <strong>How to fix:</strong> Go to Firebase Console &gt; Authentication &gt; Settings &gt; Authorized domains &gt; Add <code>{window.location.hostname}</code>.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
