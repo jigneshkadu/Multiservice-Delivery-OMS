@@ -25,11 +25,13 @@ import VendorRegistration from './components/VendorRegistration';
 import { Loader2, ShoppingBag, ArrowRight } from 'lucide-react';
 
 const App: React.FC = () => {
+  console.log("App component rendering...");
   const [view, setView] = useState<'HOME' | 'CATEGORY' | 'ADMIN' | 'VENDOR_DASHBOARD' | 'RIDER_REG' | 'RIDER_DASHBOARD' | 'VENDOR_REG'>('HOME');
   const [user, setUser] = useState<User | null>(null);
   const [activeRider, setActiveRider] = useState<Rider | null>(null);
   const [isAuthOpen, setAuthOpen] = useState(false);
   const [authInitialMode, setAuthInitialMode] = useState<UserRole>(UserRole.USER);
+  const [authInitialIsSignUp, setAuthInitialIsSignUp] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeCategory, setActiveCategory] = useState<Category | null>(null);
   
@@ -151,8 +153,9 @@ const App: React.FC = () => {
     setView('HOME');
   };
 
-  const openLogin = (mode: UserRole = UserRole.USER) => {
+  const openLogin = (mode: UserRole = UserRole.USER, isSignUp: boolean = false) => {
     setAuthInitialMode(mode);
+    setAuthInitialIsSignUp(isSignUp);
     setAuthOpen(true);
   };
 
@@ -198,19 +201,21 @@ const App: React.FC = () => {
         isOpen={isMenuOpen} 
         onClose={() => setIsMenuOpen(false)}
         user={user}
-        onLogin={openLogin}
+        onLogin={(role) => openLogin(role || UserRole.USER, false)}
+        onSignup={() => openLogin(UserRole.USER, true)}
         onLogout={() => { setUser(null); setActiveRider(null); setView('HOME'); }}
-        onAdminClick={() => openLogin(UserRole.ADMIN)}
+        onAdminClick={() => openLogin(UserRole.ADMIN, false)}
         onRiderClick={() => setView('RIDER_REG')}
         onVendorRegClick={() => setView('VENDOR_REG')}
       />
       <Header 
         user={user}
-        onLoginClick={() => openLogin()}
+        onLoginClick={() => openLogin(UserRole.USER, false)}
+        onSignupClick={() => openLogin(UserRole.USER, true)}
         onLogoutClick={() => setUser(null)}
         onMenuClick={() => setIsMenuOpen(true)}
-        onAdminClick={() => openLogin(UserRole.ADMIN)}
-        onPartnerClick={() => openLogin(UserRole.VENDOR)}
+        onAdminClick={() => openLogin(UserRole.ADMIN, false)}
+        onPartnerClick={() => openLogin(UserRole.VENDOR, false)}
         onVendorDashboardClick={() => setView('VENDOR_DASHBOARD')}
         locationText="Dahanu West, Palghar"
         onSearch={() => {}}
@@ -378,6 +383,7 @@ const App: React.FC = () => {
         isOpen={isAuthOpen} 
         onClose={() => setAuthOpen(false)} 
         initialMode={authInitialMode}
+        initialIsSignUp={authInitialIsSignUp}
         onLoginSuccess={(email, role, isNewUser) => {
           const newUser: User = { id: 'u' + Date.now(), name: email.split('@')[0], email, role: role as UserRole };
           setUser(newUser);

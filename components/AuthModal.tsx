@@ -57,16 +57,18 @@ interface AuthModalProps {
   onClose: () => void;
   onLoginSuccess: (email: string, role: UserRole, isNewUser: boolean) => void;
   initialMode?: UserRole;
+  initialIsSignUp?: boolean;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, initialMode = UserRole.USER }) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, initialMode = UserRole.USER, initialIsSignUp = false }) => {
   const [userRole, setUserRole] = useState<UserRole>(initialMode);
   const [authMethod, setAuthMethod] = useState<'MOBILE' | 'EMAIL'>('MOBILE');
   const [viewState, setViewState] = useState<'INPUT' | 'OTP'>('INPUT');
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(initialIsSignUp);
   
   const [name, setName] = useState('');
   const [mobile, setMobile] = useState('');
+  const [address, setAddress] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
@@ -81,9 +83,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
       
       setUserRole(initialMode);
       setViewState('INPUT');
-      setIsSignUp(false);
+      setIsSignUp(initialIsSignUp);
       setName('');
       setMobile('');
+      setAddress('');
       setEmail('');
       setOtp('');
       setPassword('');
@@ -95,7 +98,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
         setAuthMethod('MOBILE');
       }
     }
-  }, [initialMode, isOpen]);
+  }, [initialMode, initialIsSignUp, isOpen]);
 
   if (!isOpen) return null;
 
@@ -113,6 +116,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
           name: firebaseUser.displayName || name || 'New User',
           email: firebaseUser.email || `${mobile}@phone.com`,
           phone: firebaseUser.phoneNumber || mobile,
+          address: address || '',
           role: finalRole,
           createdAt: serverTimestamp(),
           lastLogin: serverTimestamp()
@@ -358,13 +362,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
                         {viewState === 'INPUT' ? (
                             <div className="space-y-4">
                                 {isSignUp && (
-                                    <input 
-                                        type="text" 
-                                        className="w-full border-2 border-slate-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-slate-500/10 focus:border-slate-500 outline-none font-medium text-slate-800"
-                                        placeholder="Full Name"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                    />
+                                    <div className="space-y-4">
+                                        <input 
+                                            type="text" 
+                                            className="w-full border-2 border-slate-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-slate-500/10 focus:border-slate-500 outline-none font-medium text-slate-800"
+                                            placeholder="Full Name"
+                                            value={name}
+                                            onChange={(e) => setName(e.target.value)}
+                                        />
+                                        <textarea 
+                                            className="w-full border-2 border-slate-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-slate-500/10 focus:border-slate-500 outline-none font-medium text-slate-800 resize-none"
+                                            placeholder="Full Address"
+                                            rows={2}
+                                            value={address}
+                                            onChange={(e) => setAddress(e.target.value)}
+                                        />
+                                    </div>
                                 )}
                                 <div className="relative">
                                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold border-r border-slate-200 pr-3">+91</span>
@@ -416,13 +429,22 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
                 ) : (
                     <div className="space-y-3">
                         {isSignUp && (
-                          <input 
-                              type="text" 
-                              className="w-full border-2 border-slate-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-slate-500/10 focus:border-slate-500 outline-none font-medium text-slate-800"
-                              placeholder="Full Name"
-                              value={name}
-                              onChange={(e) => setName(e.target.value)}
-                          />
+                          <div className="space-y-3">
+                            <input 
+                                type="text" 
+                                className="w-full border-2 border-slate-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-slate-500/10 focus:border-slate-500 outline-none font-medium text-slate-800"
+                                placeholder="Full Name"
+                                value={name}
+                                onChange={(e) => setName(e.target.value)}
+                            />
+                            <textarea 
+                                className="w-full border-2 border-slate-100 rounded-2xl py-4 px-6 focus:ring-4 focus:ring-slate-500/10 focus:border-slate-500 outline-none font-medium text-slate-800 resize-none"
+                                placeholder="Full Address"
+                                rows={2}
+                                value={address}
+                                onChange={(e) => setAddress(e.target.value)}
+                            />
+                          </div>
                         )}
                         <input 
                             type="email" 

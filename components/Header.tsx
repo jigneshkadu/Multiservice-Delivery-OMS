@@ -6,6 +6,7 @@ import { UserRole, User } from '../types';
 interface HeaderProps {
   user: User | null;
   onLoginClick: () => void;
+  onSignupClick: () => void;
   onLogoutClick: () => void;
   onMenuClick: () => void;
   onAdminClick: () => void;
@@ -20,7 +21,7 @@ interface HeaderProps {
 }
 
 const Header: React.FC<HeaderProps> = ({ 
-    user, onLoginClick, onLogoutClick, onMenuClick, onAdminClick, onPartnerClick, onVendorDashboardClick,
+    user, onLoginClick, onSignupClick, onLogoutClick, onMenuClick, onAdminClick, onPartnerClick, onVendorDashboardClick,
     locationText, onSearch, onHomeClick, onBackClick, showBackButton, onRegisterBusiness
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -109,13 +110,21 @@ const Header: React.FC<HeaderProps> = ({
               </div>
             </div>
           ) : (
-            <button 
-                onClick={onLoginClick} 
-                className="flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-full font-bold text-xs shadow-md hover:shadow-lg hover:bg-slate-700 transition-all active:scale-95"
-            >
-              <UserIcon className="w-4 h-4" />
-              <span>Login</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button 
+                  onClick={onLoginClick} 
+                  className="hidden md:flex items-center gap-2 text-primary hover:bg-primary/5 px-4 py-2 rounded-full font-bold text-xs transition-all"
+              >
+                <span>Login</span>
+              </button>
+              <button 
+                  onClick={onSignupClick} 
+                  className="flex items-center gap-2 bg-primary text-white px-5 py-2 rounded-full font-bold text-xs shadow-md hover:shadow-lg hover:bg-slate-700 transition-all active:scale-95"
+              >
+                <UserIcon className="w-4 h-4" />
+                <span>Sign Up</span>
+              </button>
+            </div>
           )}
         </div>
       </div>
