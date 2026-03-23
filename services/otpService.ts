@@ -65,7 +65,7 @@ const initVerifier = () => {
 
   try {
     const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-      'size': 'invisible',
+      'size': 'normal',
       'callback': (response: any) => {
         console.log("reCAPTCHA solved successfully", response ? "Token received" : "No token");
       },

@@ -75,6 +75,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
   const [isLoading, setIsLoading] = useState(false);
   const [errorInfo, setErrorInfo] = useState<{message: string, code?: string} | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [resendTimer, setResendTimer] = useState(0);
+
+  useEffect(() => {
+    let interval: any;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   useEffect(() => {
     if (isOpen) {
@@ -178,6 +189,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
           const result = await requestOtp(mobile);
           if (result.success) {
             setViewState('OTP');
+            setResendTimer(60); // 60 seconds cooldown
           } else {
             setErrorInfo({ message: result.message, code: result.code });
           }
@@ -202,6 +214,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
               setIsSignUp(false);
               setViewState('INPUT');
               setOtp('');
+              setName('');
+              setAddress('');
+              setEmail('');
               await auth.signOut();
             } else {
               onLoginSuccess(result.user.phoneNumber || `${mobile}@phone.com`, finalRole, isNew);
@@ -221,6 +236,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
           setSuccessMessage("Account created successfully! Please log in with your credentials.");
           setIsSignUp(false);
           setPassword('');
+          setName('');
+          setAddress('');
+          setEmail('');
           await auth.signOut();
         } else {
           // Check if user exists in Firestore first for "Login"
@@ -380,6 +398,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
                     </p>
                   </div>
                 )}
+                {errorInfo.code === 'auth/too-many-requests' && (
+                  <div className="mt-2 p-3 bg-white/50 rounded-lg border border-red-100">
+                    <p className="text-[10px] text-red-800 font-medium">
+                      <strong>Wait a moment:</strong> Firebase has limited requests from this device. Please wait 5-10 minutes before trying again, or try using <strong>Email Login</strong> instead.
+                    </p>
+                  </div>
+                )}
                 {errorInfo.code === 'auth/operation-not-allowed' && (
                   <div className="mt-2 p-3 bg-white/50 rounded-lg border border-red-100">
                     <p className="text-[10px] text-red-800 font-medium">
@@ -461,13 +486,14 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
                                     <div className="flex justify-between px-2">
                                         <button onClick={() => setViewState('INPUT')} className="text-[10px] font-bold text-slate-500 hover:underline">Change Number</button>
                                         <button 
+                                            disabled={resendTimer > 0 || isLoading}
                                             onClick={() => {
                                                 setViewState('INPUT');
                                                 setTimeout(() => handleAction(), 100);
                                             }} 
-                                            className="text-[10px] font-bold text-slate-600 hover:underline"
+                                            className="text-[10px] font-bold text-slate-600 hover:underline disabled:text-slate-300 disabled:no-underline"
                                         >
-                                            Resend OTP
+                                            {resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
                                         </button>
                                     </div>
                                 </div>
@@ -510,6 +536,9 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
                         />
                     </div>
                 )}
+
+                {/* reCAPTCHA container - must be visible for 'normal' size */}
+                <div id="recaptcha-container" className="flex justify-center my-2"></div>
 
                 {/* Hide the main button when in OTP view since we added a specific one above */}
                 {!(authMethod === 'MOBILE' && viewState === 'OTP' && userRole !== UserRole.ADMIN) && (

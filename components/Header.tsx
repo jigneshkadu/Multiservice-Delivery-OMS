@@ -114,7 +114,7 @@ const Header: React.FC<HeaderProps> = ({
                 className="flex items-center gap-2 bg-primary text-white px-6 py-2.5 rounded-full font-black text-[10px] uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:shadow-xl hover:bg-slate-700 transition-all active:scale-95"
             >
               <UserIcon className="w-3.5 h-3.5" />
-              <span>Login / Sign Up</span>
+              <span>Login</span>
             </button>
           )}
         </div>
