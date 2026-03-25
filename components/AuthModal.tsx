@@ -138,7 +138,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
       if (!userSnap.exists()) {
         const userData = {
           uid: firebaseUser.uid,
+<<<<<<< HEAD
           name: getCleanName(name || firebaseUser.displayName, 'New User'),
+=======
+          name: name || firebaseUser.displayName || 'New User',
+>>>>>>> 46d8092 (Admin-Panel)
           email: email || firebaseUser.email || `${mobile}@phone.com`,
           phone: firebaseUser.phoneNumber || mobile,
           address: address || '',
@@ -154,10 +158,16 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
         // Even if user exists, ensure the role is updated if it's the special UID
         await setDoc(userRef, { 
           lastLogin: serverTimestamp(),
+<<<<<<< HEAD
           name: updatedName,
           email: email || firebaseUser.email || existingData?.email,
           phone: firebaseUser.phoneNumber || mobile || existingData?.phone,
           address: address || existingData?.address,
+=======
+          email: email || firebaseUser.email || userSnap.data()?.email,
+          phone: firebaseUser.phoneNumber || mobile || userSnap.data()?.phone,
+          address: address || userSnap.data()?.address,
+>>>>>>> 46d8092 (Admin-Panel)
           role: finalRole 
         }, { merge: true });
         return { isNew: false, finalRole, name: updatedName };
@@ -306,10 +316,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
   };
 
   const handleSocialLogin = async (providerName: 'google' | 'apple' | 'microsoft') => {
+<<<<<<< HEAD
     if (!auth) {
       setErrorInfo({ message: "MOCK MODE: Social login not supported. Use Mobile (123456)." });
       return;
     }
+=======
+>>>>>>> 46d8092 (Admin-Panel)
     if (isSignUp && (!name || !address)) {
       setErrorInfo({ message: "Please fill in your Name and Address above before signing up with a social account." });
       return;
