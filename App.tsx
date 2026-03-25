@@ -1,10 +1,12 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { 
-  User, UserRole, Vendor, Category, Banner, Order, Rider, Product
+  User, UserRole, Vendor, Category, Banner, Order, Rider, Product, UserRequest, SiteVisit
 } from './types';
 import { 
-  fetchCategories, fetchVendors, fetchBanners, createOrder, registerRider, fetchRiders, fetchAllOrders, assignRiderToOrder, fetchHealth
+  fetchCategories, fetchVendors, fetchBanners, createOrder, registerRider, fetchRiders, fetchAllOrders, assignRiderToOrder, fetchHealth,
+  fetchUserRequests, fetchSiteVisits, updateProduct, fetchUsers, fetchVendorSales
 } from './services/api';
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -22,10 +24,13 @@ import ContactModal from './components/ContactModal';
 import MapVisualizer from './components/MapVisualizer';
 import AdminPanel from './components/AdminPanel';
 import VendorRegistration from './components/VendorRegistration';
-import { Loader2, ShoppingBag, ArrowRight } from 'lucide-react';
+import { Loader2, ShoppingBag, ArrowRight, ShieldAlert } from 'lucide-react';
 
 const App: React.FC = () => {
   console.log("App component rendering...");
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   const [view, setView] = useState<'HOME' | 'CATEGORY' | 'ADMIN' | 'VENDOR_DASHBOARD' | 'RIDER_REG' | 'RIDER_DASHBOARD' | 'VENDOR_REG'>('HOME');
   const [user, setUser] = useState<User | null>(null);
   const [activeRider, setActiveRider] = useState<Rider | null>(null);
@@ -40,6 +45,10 @@ const App: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
+  const [userRequests, setUserRequests] = useState<UserRequest[]>([]);
+  const [siteVisits, setSiteVisits] = useState<SiteVisit[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [vendorSales, setVendorSales] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [dbStatus, setDbStatus] = useState<{ status: string; dbConnected: boolean } | null>(null);
   
@@ -56,13 +65,17 @@ const App: React.FC = () => {
     const loadData = async () => {
       setIsLoading(true);
       try {
-        const [cats, vends, bans, rids, ords, health] = await Promise.all([
+        const [cats, vends, bans, rids, ords, health, reqs, visits, usrs, sales] = await Promise.all([
           fetchCategories(),
           fetchVendors(),
           fetchBanners(),
           fetchRiders(),
           fetchAllOrders(),
-          fetchHealth()
+          fetchHealth(),
+          fetchUserRequests(),
+          fetchSiteVisits(),
+          fetchUsers(),
+          fetchVendorSales()
         ]);
         setCategories(cats);
         setVendors(vends);
@@ -70,6 +83,10 @@ const App: React.FC = () => {
         setRiders(rids);
         setOrders(ords);
         setDbStatus(health);
+        setUserRequests(reqs);
+        setSiteVisits(visits);
+        setUsers(usrs);
+        setVendorSales(sales);
       } catch (err: any) {
         console.error("Critical error loading data", err);
       } finally {
@@ -119,9 +136,18 @@ const App: React.FC = () => {
       alert("Rider has been approved.");
   };
 
+  useEffect(() => {
+    if (location.pathname === '/admin') {
+      setView('ADMIN');
+    } else if (location.pathname === '/') {
+      setView('HOME');
+    }
+  }, [location.pathname]);
+
   const handleCategoryClick = (category: Category) => {
     setActiveCategory(category);
     setView('CATEGORY');
+    navigate('/'); // Ensure we are on home if we want to show category view as a state
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -136,7 +162,7 @@ const App: React.FC = () => {
          id: generatedOrderId,
          vendorId: selectedDeliveryVendor.id,
          vendorName: selectedDeliveryVendor.name,
-         customerName: user?.name || 'Guest User',
+         customerName: (user?.name && user.name.startsWith('+')) ? 'User' : (user?.name || 'Guest User'),
          customerPhone: user?.phone || '9876543210',
          serviceRequested: items.map(i => `${i.quantity}x ${i.product.name}`).join(', '),
          date: new Date().toISOString(),
@@ -179,6 +205,23 @@ const App: React.FC = () => {
       });
   };
 
+  const handleUpdateProduct = async (vendorId: string, productId: string, productData: Partial<Product>) => {
+    const result = await updateProduct(vendorId, productId, productData);
+    if (result.success) {
+      setVendors(prev => prev.map(v => {
+        if (v.id === vendorId) {
+          return {
+            ...v,
+            products: v.products?.map(p => p.id === productId ? { ...p, ...productData } : p)
+          };
+        }
+        return v;
+      }));
+      return true;
+    }
+    return false;
+  };
+
   if (isLoading) {
       return (
           <div className="h-screen flex flex-col items-center justify-center bg-appBg">
@@ -203,7 +246,7 @@ const App: React.FC = () => {
         user={user}
         onLogin={(role) => openLogin(role || UserRole.USER, false)}
         onLogout={() => { setUser(null); setActiveRider(null); setView('HOME'); }}
-        onAdminClick={() => openLogin(UserRole.ADMIN, false)}
+        onAdminClick={() => navigate('/admin')}
         onRiderClick={() => setView('RIDER_REG')}
         onVendorRegClick={() => setView('VENDOR_REG')}
       />
@@ -212,154 +255,189 @@ const App: React.FC = () => {
         onLoginClick={() => openLogin(UserRole.USER, false)}
         onLogoutClick={() => setUser(null)}
         onMenuClick={() => setIsMenuOpen(true)}
-        onAdminClick={() => openLogin(UserRole.ADMIN, false)}
+        onAdminClick={() => navigate('/admin')}
         onPartnerClick={() => openLogin(UserRole.VENDOR, false)}
         onVendorDashboardClick={() => setView('VENDOR_DASHBOARD')}
         locationText="Dahanu West, Palghar"
         onSearch={() => {}}
-        onHomeClick={() => setView('HOME')}
-        showBackButton={view !== 'HOME'}
-        onBackClick={() => setView('HOME')}
+        onHomeClick={() => navigate('/')}
+        showBackButton={view !== 'HOME' || location.pathname !== '/'}
+        onBackClick={() => navigate('/')}
         onRegisterBusiness={() => setView('VENDOR_REG')}
       />
 
       <main className="flex-1 pb-28">
-        {view === 'HOME' && (
-            <div className="container mx-auto px-4 py-4 space-y-6 animate-fade-in">
-                <BannerCarousel banners={banners} />
-                <FeaturedService 
-                    vendors={vendors} 
-                    onContactClick={(v) => setSelectedContactVendor(v)} 
-                    onOrderClick={(v) => setSelectedDeliveryVendor(v)} 
-                />
-                
-                {/* Dynamic Product Showcase - Replaced Category Grid */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h2 className="text-slate-900 font-black text-sm uppercase tracking-[0.2em] flex items-center gap-2">
-                        <div className="w-8 h-[2px] bg-secondary"></div> Top Picks for You
-                    </h2>
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Updates in 10s</span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                      {displayProducts.map((item, idx) => (
-                          <div 
-                            key={`${item.vendor.id}-${idx}`} 
-                            className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all group flex flex-col h-full animate-fade-in"
-                          >
-                              <div className="aspect-square relative overflow-hidden bg-gray-100">
-                                  <img 
-                                    src={item.product.image || `https://picsum.photos/400/400?random=${idx + productBatchIndex}`} 
-                                    alt={item.product.name}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                  />
-                                  <div className="absolute top-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded-full text-[10px] font-black text-primary shadow-sm">
-                                      ₹{item.product.price}
-                                  </div>
-                              </div>
-                              <div className="p-3 flex flex-col flex-1">
-                                  <h4 className="font-bold text-gray-800 text-xs line-clamp-1 mb-0.5" title={item.product.name}>
-                                    {item.product.name}
-                                  </h4>
-                                  <p className="text-[9px] text-gray-400 font-bold uppercase truncate mb-3">
-                                    by {item.vendor.name}
-                                  </p>
-                                  <button 
-                                    onClick={() => setSelectedDeliveryVendor(item.vendor)}
-                                    className="mt-auto w-full bg-primary hover:bg-slate-700 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-sm active:scale-95"
-                                  >
-                                    <ShoppingBag className="w-3 h-3" /> Order Now
-                                  </button>
-                              </div>
-                          </div>
-                      ))}
-                      {displayProducts.length === 0 && (
-                        <div className="col-span-full py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs border border-dashed border-slate-200 rounded-3xl">
-                          Discovering fresh products...
+        <Routes>
+          <Route path="/admin" element={
+            user?.role === UserRole.ADMIN ? (
+              <AdminPanel 
+                currentUser={user}
+                categories={categories} 
+                vendors={vendors} 
+                banners={banners} 
+                orders={orders} 
+                riders={riders} 
+                userRequests={userRequests}
+                siteVisits={siteVisits}
+                users={users}
+                vendorSales={vendorSales}
+                onAssignRider={handleAssignRider}
+                onApproveVendor={(id) => setVendors(prev => prev.map(v => v.id === id ? {...v, isApproved: true} : v))} 
+                onApproveRider={handleApproveRider}
+                onRemoveVendor={(id) => setVendors(prev => prev.filter(v => v.id !== id))}
+                onAddCategory={handleAddCategory}
+                onRemoveCategory={handleRemoveCategory}
+                onUpdateProduct={handleUpdateProduct}
+              />
+            ) : (
+              <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center bg-slate-50">
+                <div className="w-24 h-24 bg-red-50 rounded-full flex items-center justify-center mb-6 shadow-xl border border-red-100">
+                  <ShieldAlert className="w-12 h-12 text-red-500" />
+                </div>
+                <h2 className="text-3xl font-black text-slate-900 mb-2 uppercase tracking-tighter">Access Denied</h2>
+                <p className="text-slate-500 mb-8 max-w-md font-medium">This secure portal is reserved for Dahanu Multiservice administrators. Please authenticate to continue.</p>
+                <div className="flex flex-col sm:flex-row gap-4 w-full max-w-xs">
+                  <button 
+                    onClick={() => openLogin(UserRole.ADMIN)}
+                    className="flex-1 bg-primary text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:shadow-xl hover:bg-slate-800 transition-all active:scale-95"
+                  >
+                    Admin Login
+                  </button>
+                  <button 
+                    onClick={() => navigate('/')}
+                    className="flex-1 bg-white text-slate-900 border border-slate-200 px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
+                  >
+                    Return Home
+                  </button>
+                </div>
+              </div>
+            )
+          } />
+          <Route path="*" element={
+            <>
+              {view === 'HOME' && (
+                  <div className="container mx-auto px-4 py-4 space-y-6 animate-fade-in">
+                      <BannerCarousel banners={banners} />
+                      <FeaturedService 
+                          vendors={vendors} 
+                          onContactClick={(v) => setSelectedContactVendor(v)} 
+                          onOrderClick={(v) => setSelectedDeliveryVendor(v)} 
+                      />
+                      
+                      {/* Dynamic Product Showcase - Replaced Category Grid */}
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <h2 className="text-slate-900 font-black text-sm uppercase tracking-[0.2em] flex items-center gap-2">
+                              <div className="w-8 h-[2px] bg-secondary"></div> Top Picks for You
+                          </h2>
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Updates in 10s</span>
                         </div>
-                      )}
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                            {displayProducts.map((item, idx) => (
+                                <div 
+                                  key={`${item.vendor.id}-${idx}`} 
+                                  className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all group flex flex-col h-full animate-fade-in"
+                                >
+                                    <div className="aspect-square relative overflow-hidden bg-gray-100">
+                                        <img 
+                                          src={item.product.image || `https://picsum.photos/400/400?random=${idx + productBatchIndex}`} 
+                                          alt={item.product.name}
+                                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                        />
+                                        <div className="absolute top-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded-full text-[10px] font-black text-primary shadow-sm">
+                                            ₹{item.product.price}
+                                        </div>
+                                    </div>
+                                    <div className="p-3 flex flex-col flex-1">
+                                        <h4 className="font-bold text-gray-800 text-xs line-clamp-1 mb-0.5" title={item.product.name}>
+                                          {item.product.name}
+                                        </h4>
+                                        <p className="text-[9px] text-gray-400 font-bold uppercase truncate mb-3">
+                                          by {item.vendor.name}
+                                        </p>
+                                        <button 
+                                          onClick={() => setSelectedDeliveryVendor(item.vendor)}
+                                          className="mt-auto w-full bg-primary hover:bg-slate-700 text-white py-2 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center justify-center gap-1.5 transition-colors shadow-sm active:scale-95"
+                                        >
+                                          <ShoppingBag className="w-3 h-3" /> Order Now
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                            {displayProducts.length === 0 && (
+                              <div className="col-span-full py-20 text-center text-slate-400 font-bold uppercase tracking-widest text-xs border border-dashed border-slate-200 rounded-3xl">
+                                Discovering fresh products...
+                              </div>
+                            )}
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+                         <div className="flex justify-between items-center mb-4">
+                             <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">Logistics Fleet</h2>
+                             <div className="flex items-center gap-2">
+                                 <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
+                                 <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{riders.filter(r => r.status === 'ONLINE').length} Active Partners</span>
+                             </div>
+                         </div>
+                         <div className="h-72 rounded-2xl overflow-hidden border border-slate-100 shadow-inner">
+                            <MapVisualizer vendors={[]} riders={riders} userLocation={null} />
+                         </div>
+                      </div>
                   </div>
-                </div>
+              )}
+              
+              {view === 'CATEGORY' && activeCategory && (
+                  <CategoryView 
+                    category={activeCategory} 
+                    onBack={() => setView('HOME')} 
+                    onSelectSubCategory={(sub) => handleCategoryClick(sub)} 
+                    vendors={vendors} 
+                    userLocation={null} 
+                    onContact={(v) => setSelectedContactVendor(v)}
+                    onDirection={(v) => handleDirectionClick(v)}
+                    onOrder={(v) => setSelectedDeliveryVendor(v)}
+                    onRegisterClick={() => setView('VENDOR_REG')}
+                  />
+              )}
 
-                <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-                   <div className="flex justify-between items-center mb-4">
-                       <h2 className="text-xl font-bold text-slate-900 flex items-center gap-2">Logistics Fleet</h2>
-                       <div className="flex items-center gap-2">
-                           <div className="w-2 h-2 rounded-full bg-slate-500 animate-pulse"></div>
-                           <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{riders.filter(r => r.status === 'ONLINE').length} Active Partners</span>
-                       </div>
-                   </div>
-                   <div className="h-72 rounded-2xl overflow-hidden border border-slate-100 shadow-inner">
-                      <MapVisualizer vendors={[]} riders={riders} userLocation={null} />
-                   </div>
-                </div>
-            </div>
-        )}
-        
-        {view === 'CATEGORY' && activeCategory && (
-            <CategoryView 
-              category={activeCategory} 
-              onBack={() => setView('HOME')} 
-              onSelectSubCategory={(sub) => handleCategoryClick(sub)} 
-              vendors={vendors} 
-              userLocation={null} 
-              onContact={(v) => setSelectedContactVendor(v)}
-              onDirection={(v) => handleDirectionClick(v)}
-              onOrder={(v) => setSelectedDeliveryVendor(v)}
-              onRegisterClick={() => setView('VENDOR_REG')}
-            />
-        )}
+              {view === 'VENDOR_REG' && (
+                  <div className="container mx-auto px-4 py-8">
+                      <VendorRegistration 
+                          categories={categories} 
+                          onSubmit={handleVendorRegSubmit} 
+                          onCancel={() => setView('HOME')} 
+                      />
+                  </div>
+              )}
 
-        {view === 'ADMIN' && (
-           <AdminPanel 
-             categories={categories} 
-             vendors={vendors} 
-             banners={banners} 
-             orders={orders} 
-             riders={riders} 
-             onAssignRider={handleAssignRider}
-             onApproveVendor={(id) => setVendors(prev => prev.map(v => v.id === id ? {...v, isApproved: true} : v))} 
-             onApproveRider={handleApproveRider}
-             onRemoveVendor={(id) => setVendors(prev => prev.filter(v => v.id !== id))}
-             onAddCategory={handleAddCategory}
-             onRemoveCategory={handleRemoveCategory}
-           />
-        )}
+              {view === 'VENDOR_DASHBOARD' && currentVendorProfile && (
+                  <VendorDashboard 
+                      vendor={currentVendorProfile} 
+                      orders={orders.filter(o => o.vendorId === currentVendorProfile.id)} 
+                      onUpdateStatus={(id, status) => setOrders(prev => prev.map(o => o.id === id ? {...o, status} : o))}
+                      onUpdateVendor={(updated) => setVendors(prev => prev.map(v => v.id === updated.id ? updated : v))}
+                  />
+              )}
 
-        {view === 'VENDOR_REG' && (
-            <div className="container mx-auto px-4 py-8">
-                <VendorRegistration 
-                    categories={categories} 
-                    onSubmit={handleVendorRegSubmit} 
-                    onCancel={() => setView('HOME')} 
-                />
-            </div>
-        )}
+              {view === 'RIDER_REG' && (
+                  <RiderRegistration 
+                      onSubmit={(d) => { 
+                          const nr = { ...d, id: 'rid_' + Date.now(), isApproved: false } as Rider;
+                          setRiders(prev => [...prev, nr]);
+                          setView('HOME'); 
+                      }} 
+                      onCancel={() => setView('HOME')} 
+                  />
+              )}
 
-        {view === 'VENDOR_DASHBOARD' && currentVendorProfile && (
-            <VendorDashboard 
-                vendor={currentVendorProfile} 
-                orders={orders.filter(o => o.vendorId === currentVendorProfile.id)} 
-                onUpdateStatus={(id, status) => setOrders(prev => prev.map(o => o.id === id ? {...o, status} : o))}
-                onUpdateVendor={(updated) => setVendors(prev => prev.map(v => v.id === updated.id ? updated : v))}
-            />
-        )}
-
-        {view === 'RIDER_REG' && (
-            <RiderRegistration 
-                onSubmit={(d) => { 
-                    const nr = { ...d, id: 'rid_' + Date.now(), isApproved: false } as Rider;
-                    setRiders(prev => [...prev, nr]);
-                    setView('HOME'); 
-                }} 
-                onCancel={() => setView('HOME')} 
-            />
-        )}
-
-        {view === 'RIDER_DASHBOARD' && activeRider && (
-            <RiderDashboard rider={activeRider} onUpdateLocation={() => {}} onUpdateStatus={() => {}} />
-        )}
+              {view === 'RIDER_DASHBOARD' && activeRider && (
+                  <RiderDashboard rider={activeRider} onUpdateLocation={() => {}} onUpdateStatus={() => {}} />
+              )}
+            </>
+          } />
+        </Routes>
       </main>
 
       <Footer />
@@ -382,10 +460,10 @@ const App: React.FC = () => {
         onClose={() => setAuthOpen(false)} 
         initialMode={authInitialMode}
         initialIsSignUp={authInitialIsSignUp}
-        onLoginSuccess={(email, role, isNewUser) => {
-          const newUser: User = { id: 'u' + Date.now(), name: email.split('@')[0], email, role: role as UserRole };
+        onLoginSuccess={(email, role, isNewUser, name) => {
+          const newUser: User = { id: 'u' + Date.now(), name, email, role: role as UserRole };
           setUser(newUser);
-          if (role === UserRole.ADMIN) setView('ADMIN');
+          if (role === UserRole.ADMIN) navigate('/admin');
           else if (role === UserRole.VENDOR) setView('VENDOR_DASHBOARD');
           else if (role === UserRole.RIDER) setView('RIDER_DASHBOARD');
       }} />
