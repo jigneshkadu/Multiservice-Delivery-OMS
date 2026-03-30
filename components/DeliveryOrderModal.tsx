@@ -1,23 +1,28 @@
 
-import React, { useState } from 'react';
-import { Vendor, Product } from '../types';
-import { X, Plus, Minus, ShoppingBag, Truck, CheckCircle, CreditCard, FileText, Printer, Download } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Vendor, Product, Rider } from '../types';
+import { X, Plus, Minus, ShoppingBag, Truck, CheckCircle, CreditCard, FileText, Printer, Download, MapPin, User, Loader2, Navigation } from 'lucide-react';
 import PaymentModal from './PaymentModal';
 
 interface DeliveryOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   vendor: Vendor;
-  onPlaceOrder: (items: { product: Product, quantity: number }[], total: number, orderId: string) => void;
+  onPlaceOrder: (items: { product: Product, quantity: number }[], total: number, orderId: string, rider?: Rider, address?: string) => void;
+  riders: Rider[];
 }
 
-const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose, vendor, onPlaceOrder }) => {
+type OrderStep = 'CART' | 'ADDRESS' | 'RIDER_ASSIGN' | 'PAYMENT' | 'SUCCESS';
+
+const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose, vendor, onPlaceOrder, riders }) => {
   const [cart, setCart] = useState<{ [key: string]: number }>({});
-  const [isSuccess, setIsSuccess] = useState(false);
-  const [showPayment, setShowPayment] = useState(false);
+  const [step, setStep] = useState<OrderStep>('CART');
   const [lastOrderId, setLastOrderId] = useState('');
   const [viewInvoice, setViewInvoice] = useState(false);
   const [isBasketExpanded, setIsBasketExpanded] = useState(false);
+  const [address, setAddress] = useState('Dahanu Road, Palghar');
+  const [assignedRider, setAssignedRider] = useState<Rider | null>(null);
+  const [isAssigning, setIsAssigning] = useState(false);
 
   if (!isOpen) return null;
 
@@ -43,13 +48,36 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
   const totalAmount = calculateTotal();
   const cartItemCount = Object.values(cart).reduce((a: number, b: number) => a + b, 0) as number;
 
-  const handleProceed = () => {
+  const handleProceedToAddress = () => {
     if (totalAmount <= 0) return;
-    setShowPayment(true);
+    setStep('ADDRESS');
+  };
+
+  const handleVerifyAddress = () => {
+    setStep('RIDER_ASSIGN');
+    setIsAssigning(true);
+    
+    // Simulate finding nearby rider
+    setTimeout(() => {
+        const onlineRiders = riders.filter(r => r.status === 'ONLINE');
+        if (onlineRiders.length > 0) {
+            // Pick closest rider (Euclidean distance)
+            const sorted = [...onlineRiders].sort((a, b) => {
+                const distA = Math.sqrt(Math.pow(a.location.lat - vendor.location.lat, 2) + Math.pow(a.location.lng - vendor.location.lng, 2));
+                const distB = Math.sqrt(Math.pow(b.location.lat - vendor.location.lat, 2) + Math.pow(b.location.lng - vendor.location.lng, 2));
+                return distA - distB;
+            });
+            setAssignedRider(sorted[0]);
+        }
+        setIsAssigning(false);
+    }, 2000);
+  };
+
+  const handleConfirmRider = () => {
+    setStep('PAYMENT');
   };
 
   const handlePaymentSuccess = () => {
-      setShowPayment(false);
       const newOrderId = 'ORD-' + Math.floor(Math.random() * 90000 + 10000);
       setLastOrderId(newOrderId);
       
@@ -57,10 +85,10 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
         ?.filter(p => cart[p.name])
         .map(p => ({ product: p, quantity: cart[p.name] })) || [];
 
-      setIsSuccess(true);
+      setStep('SUCCESS');
       
       setTimeout(() => {
-          onPlaceOrder(orderItems, totalAmount, newOrderId);
+          onPlaceOrder(orderItems, totalAmount, newOrderId, assignedRider || undefined, address);
       }, 500);
   };
 
@@ -87,11 +115,30 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
                           </div>
                       </div>
 
-                      <div>
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Merchant</p>
-                          <p className="font-bold text-gray-900">{vendor.name}</p>
-                          <p className="text-xs text-gray-500">{vendor.location.address}</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Merchant</p>
+                            <p className="font-bold text-gray-900">{vendor.name}</p>
+                            <p className="text-xs text-gray-500">{vendor.location.address}</p>
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Delivery To</p>
+                            <p className="font-bold text-gray-900">Customer</p>
+                            <p className="text-xs text-gray-500">{address}</p>
+                        </div>
                       </div>
+
+                      {assignedRider && (
+                        <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Assigned Rider</p>
+                            <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 bg-primary/10 rounded-full flex items-center justify-center">
+                                    <Truck className="w-3 h-3 text-primary" />
+                                </div>
+                                <span className="text-sm font-bold text-slate-700">{assignedRider.name}</span>
+                            </div>
+                        </div>
+                      )}
 
                       <div className="space-y-3">
                           <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Item Summary</p>
@@ -135,7 +182,7 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
       );
   }
 
-  if (isSuccess) {
+  if (step === 'SUCCESS') {
       return (
           <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
               <div className="bg-white p-8 rounded-2xl shadow-2xl flex flex-col items-center max-w-sm w-full mx-4">
@@ -144,7 +191,20 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
                   </div>
                   <h2 className="text-xl font-bold text-gray-800 mb-2">Order Confirmed!</h2>
                   <p className="text-center text-gray-500 mb-2">Order ID: <span className="font-mono font-bold text-gray-900">{lastOrderId}</span></p>
-                  <p className="text-center text-xs text-gray-400 mb-8 leading-relaxed">Your delivery request has been sent to {vendor.name}. Track your order in the dashboard.</p>
+                  <p className="text-center text-xs text-gray-400 mb-4 leading-relaxed">Your delivery request has been sent to {vendor.name}.</p>
+                  
+                  {assignedRider && (
+                    <div className="w-full bg-emerald-50 border border-emerald-100 p-4 rounded-2xl mb-8 flex items-center gap-4">
+                        <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center">
+                            <Truck className="w-6 h-6 text-emerald-600" />
+                        </div>
+                        <div>
+                            <p className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Assigned Rider</p>
+                            <p className="font-bold text-slate-900">{assignedRider.name}</p>
+                            <p className="text-[10px] text-slate-500 font-medium">Arriving soon from {vendor.name}</p>
+                        </div>
+                    </div>
+                  )}
                   
                   <div className="w-full space-y-3">
                       <button onClick={() => setViewInvoice(true)} className="w-full bg-primary text-white py-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2">
@@ -162,14 +222,113 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm md:p-4 animate-fade-in font-sans">
       
-      {showPayment && (
+      {step === 'PAYMENT' && (
           <PaymentModal 
-             isOpen={showPayment}
-             onClose={() => setShowPayment(false)}
+             isOpen={step === 'PAYMENT'}
+             onClose={() => setStep('CART')}
              amount={totalAmount}
              title={`Order from ${vendor.name}`}
              onSuccess={handlePaymentSuccess}
           />
+      )}
+
+      {step === 'ADDRESS' && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+              <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl">
+                  <div className="p-6 border-b flex justify-between items-center">
+                      <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight flex items-center gap-2">
+                          <MapPin className="w-5 h-5 text-primary" /> Verify Address
+                      </h2>
+                      <button onClick={() => setStep('CART')} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X className="w-5 h-5 text-slate-400" /></button>
+                  </div>
+                  <div className="p-8 space-y-6">
+                      <div className="space-y-4">
+                          <label className="block">
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Delivery Location</span>
+                              <div className="relative">
+                                  <textarea 
+                                    value={address}
+                                    onChange={(e) => setAddress(e.target.value)}
+                                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-bold text-slate-700 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none h-32"
+                                    placeholder="Enter your full address..."
+                                  />
+                                  <div className="absolute bottom-4 right-4 text-primary">
+                                      <Navigation className="w-4 h-4" />
+                                  </div>
+                              </div>
+                          </label>
+                          <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex gap-3">
+                              <Truck className="w-5 h-5 text-blue-600 shrink-0" />
+                              <p className="text-xs text-blue-700 font-medium leading-relaxed">
+                                  Please ensure your address is accurate. Our riders use this location for precise delivery.
+                              </p>
+                          </div>
+                      </div>
+                      <button 
+                        onClick={handleVerifyAddress}
+                        className="w-full bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-slate-800 transition-all active:scale-95"
+                      >
+                          Confirm & Find Rider
+                      </button>
+                  </div>
+              </div>
+          </div>
+      )}
+
+      {step === 'RIDER_ASSIGN' && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+              <div className="bg-white w-full max-w-md rounded-3xl overflow-hidden shadow-2xl">
+                  <div className="p-8 flex flex-col items-center text-center space-y-6">
+                      {isAssigning ? (
+                          <>
+                              <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center relative">
+                                  <div className="absolute inset-0 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                                  <Truck className="w-10 h-10 text-primary" />
+                              </div>
+                              <div>
+                                  <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">Finding Nearby Rider</h2>
+                                  <p className="text-sm text-slate-500 font-medium">Connecting with the best delivery partner near {vendor.name}...</p>
+                              </div>
+                          </>
+                      ) : (
+                          <>
+                              <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center">
+                                  <CheckCircle className="w-10 h-10 text-emerald-600" />
+                              </div>
+                              <div>
+                                  <h2 className="text-xl font-black text-slate-900 uppercase tracking-tight mb-2">Rider Assigned!</h2>
+                                  {assignedRider ? (
+                                      <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 w-full mt-4">
+                                          <div className="flex items-center gap-4">
+                                              <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center border border-slate-100">
+                                                  <User className="w-6 h-6 text-slate-400" />
+                                              </div>
+                                              <div className="text-left">
+                                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Delivery Partner</p>
+                                                  <p className="font-bold text-slate-900">{assignedRider.name}</p>
+                                                  <div className="flex items-center gap-1 mt-0.5">
+                                                      <span className="text-[10px] font-black text-emerald-600 uppercase">★ {assignedRider.rating}</span>
+                                                      <span className="text-[10px] text-slate-300">•</span>
+                                                      <span className="text-[10px] font-black text-slate-500 uppercase">{assignedRider.vehicleType}</span>
+                                                  </div>
+                                              </div>
+                                          </div>
+                                      </div>
+                                  ) : (
+                                      <p className="text-sm text-rose-500 font-bold uppercase tracking-widest mt-4">No riders available nearby. Order will be queued.</p>
+                                  )}
+                              </div>
+                              <button 
+                                onClick={handleConfirmRider}
+                                className="w-full bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:bg-slate-800 transition-all active:scale-95"
+                              >
+                                  Proceed to Payment
+                              </button>
+                          </>
+                      )}
+                  </div>
+              </div>
+          </div>
       )}
 
       <div className="bg-white w-full h-full md:h-[90vh] md:max-w-5xl md:rounded-xl flex flex-col md:flex-row overflow-hidden relative shadow-2xl">
@@ -299,7 +458,7 @@ const DeliveryOrderModal: React.FC<DeliveryOrderModalProps> = ({ isOpen, onClose
                 </div>
                 
                 <button 
-                    onClick={(e) => { e.stopPropagation(); handleProceed(); }}
+                    onClick={(e) => { e.stopPropagation(); handleProceedToAddress(); }}
                     disabled={totalAmount === 0}
                     className="w-full bg-secondary text-white py-2.5 md:py-3 rounded-lg font-bold shadow hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition flex justify-between px-4 md:px-6 items-center"
                 >

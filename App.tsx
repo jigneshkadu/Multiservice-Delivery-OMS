@@ -130,21 +130,32 @@ const App: React.FC = () => {
     window.open(url, '_blank');
   };
 
-  const handlePlaceOrder = async (items: any[], total: number, generatedOrderId: string) => {
+  const handlePlaceOrder = async (items: { product: Product, quantity: number }[], total: number, generatedOrderId: string, rider?: Rider, address?: string) => {
      if (!selectedDeliveryVendor) return;
      const newOrder: Order = {
          id: generatedOrderId,
          vendorId: selectedDeliveryVendor.id,
          vendorName: selectedDeliveryVendor.name,
+         riderId: rider?.id,
+         riderName: rider?.name,
+         riderPhone: rider?.phone,
          customerName: (user?.name && user.name.startsWith('+')) ? 'User' : (user?.name || 'Guest User'),
          customerPhone: user?.phone || '9876543210',
          serviceRequested: items.map(i => `${i.quantity}x ${i.product.name}`).join(', '),
          date: new Date().toISOString(),
-         status: 'PENDING',
+         status: rider ? 'ACCEPTED' : 'PENDING',
          total_amount: total,
-         address: 'Dahanu Road, Palghar'
+         address: address || 'Dahanu Road, Palghar'
      };
-     setOrders(prev => [newOrder, ...prev]);
+     
+     try {
+         await createOrder(newOrder);
+         setOrders(prev => [newOrder, ...prev]);
+     } catch (err) {
+         console.error("Failed to persist order", err);
+         // Still update local state for demo purposes
+         setOrders(prev => [newOrder, ...prev]);
+     }
   };
 
   const handleVendorRegSubmit = (newVendor: Partial<Vendor>) => {
@@ -391,7 +402,13 @@ const App: React.FC = () => {
       }} />
       
       {selectedDeliveryVendor && (
-          <DeliveryOrderModal isOpen={!!selectedDeliveryVendor} onClose={() => setSelectedDeliveryVendor(null)} vendor={selectedDeliveryVendor} onPlaceOrder={handlePlaceOrder} />
+          <DeliveryOrderModal 
+            isOpen={!!selectedDeliveryVendor} 
+            onClose={() => setSelectedDeliveryVendor(null)} 
+            vendor={selectedDeliveryVendor} 
+            onPlaceOrder={handlePlaceOrder} 
+            riders={riders}
+          />
       )}
 
       {selectedContactVendor && (
