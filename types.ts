@@ -7,13 +7,6 @@ export enum UserRole {
   GUEST = 'GUEST'
 }
 
-export enum AdminRole {
-  SUPER_ADMIN = 'SUPER_ADMIN',
-  VENDOR_MANAGEMENT = 'VENDOR_MANAGEMENT',
-  REPORT_ADMIN = 'REPORT_ADMIN',
-  USER_MANAGEMENT = 'USER_MANAGEMENT'
-}
-
 export interface Category {
   id: string;
   name: string;
@@ -27,28 +20,9 @@ export interface Category {
 }
 
 export interface Product {
-  id: string;
   name: string;
   price: number;
   image?: string; 
-}
-
-export interface SiteVisit {
-  id: string;
-  date: string;
-  page: string;
-  userId?: string;
-  device?: string;
-}
-
-export interface UserRequest {
-  id: string;
-  userId: string;
-  userName: string;
-  type: string;
-  status: 'PENDING' | 'RESOLVED' | 'IN_PROGRESS';
-  date: string;
-  details: string;
 }
 
 export interface Vendor {
@@ -108,13 +82,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
-  adminRole?: AdminRole;
   phone?: string;
-  address?: string;
-  createdAt?: string;
-  lastLogin?: string;
-  purchases?: Order[];
-  visitedCategories?: string[]; // Array of category IDs
 }
 
 export type OrderStatus = 'PENDING' | 'ACCEPTED' | 'PREPARING' | 'OUT_FOR_DELIVERY' | 'COMPLETED' | 'REJECTED';

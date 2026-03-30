@@ -89,7 +89,10 @@ const Header: React.FC<HeaderProps> = ({
             <div className="relative group">
               <button className="flex items-center gap-2 hover:bg-slate-100 p-1 pr-3 rounded-full transition-all border border-transparent hover:border-slate-200">
                 <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-primary to-slate-400 flex items-center justify-center text-white font-bold text-xs shadow-sm border border-white/20">
-                    {user.name.charAt(0).toUpperCase()}
+                    {(() => {
+                        const cleanName = user.name.replace(/^\+/, '');
+                        return cleanName.charAt(0).toUpperCase() || 'U';
+                    })()}
                 </div>
               </button>
               <div className="absolute right-0 top-full mt-2 w-48 bg-white text-slate-800 shadow-2xl rounded-xl overflow-hidden hidden group-hover:block z-50 animate-fade-in border border-slate-100">

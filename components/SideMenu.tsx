@@ -35,7 +35,9 @@ const SideMenu: React.FC<SideMenuProps> = ({ isOpen, onClose, user, onLogin, onL
               <div className="overflow-hidden">
                 {user ? (
                     <div className="flex flex-col">
-                        <span className="font-bold text-sm truncate">{user.name}</span>
+                        <span className="font-bold text-sm truncate">
+                            {user.name.startsWith('+') ? 'User' : user.name}
+                        </span>
                         <span className="text-[10px] font-black text-secondary uppercase tracking-widest">{user.role} Account</span>
                     </div>
                 ) : (

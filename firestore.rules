@@ -32,6 +32,7 @@ service cloud.firestore {
     function isAdmin() {
       return isAuthenticated() && 
         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN' ||
+         request.auth.uid == "iWIFwcoiAHNCY5G12CV2DIRFfGO2" ||
          (request.auth.token.email == "jigneshkadu@gmail.com" && request.auth.token.email_verified == true));
     }
 
@@ -51,6 +52,10 @@ service cloud.firestore {
     // ===============================================================
     // Rules
     // ===============================================================
+
+    match /test/{document=**} {
+      allow read: if true;
+    }
 
     match /users/{userId} {
       allow read: if isOwner(userId) || isAdmin();

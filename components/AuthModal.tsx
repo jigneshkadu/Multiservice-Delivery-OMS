@@ -47,12 +47,10 @@ const MicrosoftIcon = () => (
   </svg>
 );
 
-const ADMIN_CREDENTIALS = [
-  { email: 'admin@dahanu.com', password: 'admin', role: 'SUPER_ADMIN' },
-  { email: 'vendor_admin@dahanu.com', password: 'admin', role: 'VENDOR_MANAGEMENT' },
-  { email: 'report_admin@dahanu.com', password: 'admin', role: 'REPORT_ADMIN' },
-  { email: 'user_admin@dahanu.com', password: 'admin', role: 'USER_MANAGEMENT' }
-];
+const ADMIN_CREDENTIALS = {
+  email: 'admin@dahanu.com',
+  password: 'admin'
+};
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -118,10 +116,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
   if (!isOpen) return null;
 
   const saveUserToFirestore = async (firebaseUser: any, role: UserRole) => {
-    if (!db) {
-      console.warn("Firestore not initialized. Skipping save to Firestore.");
-      return { isNew: false, finalRole: role, name: name || firebaseUser.displayName || 'Mock User' };
-    }
     const userRef = doc(db, 'users', firebaseUser.uid);
     try {
       const userSnap = await getDoc(userRef);
@@ -138,11 +132,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
       if (!userSnap.exists()) {
         const userData = {
           uid: firebaseUser.uid,
-<<<<<<< HEAD
           name: getCleanName(name || firebaseUser.displayName, 'New User'),
-=======
-          name: name || firebaseUser.displayName || 'New User',
->>>>>>> 46d8092 (Admin-Panel)
           email: email || firebaseUser.email || `${mobile}@phone.com`,
           phone: firebaseUser.phoneNumber || mobile,
           address: address || '',
@@ -158,16 +148,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
         // Even if user exists, ensure the role is updated if it's the special UID
         await setDoc(userRef, { 
           lastLogin: serverTimestamp(),
-<<<<<<< HEAD
           name: updatedName,
           email: email || firebaseUser.email || existingData?.email,
           phone: firebaseUser.phoneNumber || mobile || existingData?.phone,
           address: address || existingData?.address,
-=======
-          email: email || firebaseUser.email || userSnap.data()?.email,
-          phone: firebaseUser.phoneNumber || mobile || userSnap.data()?.phone,
-          address: address || userSnap.data()?.address,
->>>>>>> 46d8092 (Admin-Panel)
           role: finalRole 
         }, { merge: true });
         return { isNew: false, finalRole, name: updatedName };
@@ -186,9 +170,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
     try {
       // Hardcoded Admin Login
       if (userRole === UserRole.ADMIN) {
-        const admin = ADMIN_CREDENTIALS.find(a => a.email === email && a.password === password);
-        if (admin) {
-          onLoginSuccess(email, UserRole.ADMIN, false, admin.role.replace('_', ' '));
+        if (email === ADMIN_CREDENTIALS.email && password === ADMIN_CREDENTIALS.password) {
+          onLoginSuccess(email, UserRole.ADMIN, false, 'Admin');
           onClose();
           setIsLoading(false);
           return;
@@ -229,7 +212,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
             if (!isSignUp && !userSnap.exists()) {
               setErrorInfo({ message: "Account not found. Please sign up first." });
               // Optionally sign out the user if they were automatically created
-              if (auth) await auth.signOut();
+              await auth.signOut();
               setIsLoading(false);
               return;
             }
@@ -256,11 +239,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
       }
       else if (authMethod === 'EMAIL') {
         if (isSignUp) {
-          if (!auth) {
-            setErrorInfo({ message: "MOCK MODE: Sign up with email not supported. Use Mobile (123456)." });
-            setIsLoading(false);
-            return;
-          }
           const userCred = await createUserWithEmailAndPassword(auth, email, password);
           if (name && userCred.user) await updateProfile(userCred.user, { displayName: name });
           await saveUserToFirestore(userCred.user, userRole);
@@ -278,11 +256,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
           // and then check Firestore, or check Firestore first if we have a way to map email to UID.
           // Firebase Auth signIn will fail if user doesn't exist in Auth.
           try {
-            if (!auth) {
-              setErrorInfo({ message: "MOCK MODE: Login with email not supported. Use Mobile (123456)." });
-              setIsLoading(false);
-              return;
-            }
             const userCred = await signInWithEmailAndPassword(auth, email, password);
             const userRef = doc(db, 'users', userCred.user.uid);
             const userSnap = await getDoc(userRef);
@@ -316,13 +289,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
   };
 
   const handleSocialLogin = async (providerName: 'google' | 'apple' | 'microsoft') => {
-<<<<<<< HEAD
-    if (!auth) {
-      setErrorInfo({ message: "MOCK MODE: Social login not supported. Use Mobile (123456)." });
-      return;
-    }
-=======
->>>>>>> 46d8092 (Admin-Panel)
     if (isSignUp && (!name || !address)) {
       setErrorInfo({ message: "Please fill in your Name and Address above before signing up with a social account." });
       return;
@@ -377,30 +343,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onLoginSuccess, 
                     {userRole === UserRole.ADMIN ? 'Admin Portal' : (isSignUp ? 'Create Account' : 'Welcome Back')}
                 </h2>
                 
-                {userRole === UserRole.ADMIN && (
-                  <div className="mb-6 p-4 bg-white/5 rounded-2xl border border-white/10">
-                    <p className="text-[10px] font-bold text-white/40 uppercase tracking-widest mb-3">Admin Roles Hint:</p>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-[10px]">
-                        <span className="text-white/60">Super Admin:</span>
-                        <span className="text-amber-400">admin@dahanu.com</span>
-                      </div>
-                      <div className="flex justify-between text-[10px]">
-                        <span className="text-white/60">Vendor Admin:</span>
-                        <span className="text-amber-400">vendor_admin@dahanu.com</span>
-                      </div>
-                      <div className="flex justify-between text-[10px]">
-                        <span className="text-white/60">Report Admin:</span>
-                        <span className="text-amber-400">report_admin@dahanu.com</span>
-                      </div>
-                      <div className="flex justify-between text-[10px]">
-                        <span className="text-white/60">User Admin:</span>
-                        <span className="text-amber-400">user_admin@dahanu.com</span>
-                      </div>
-                      <p className="text-[9px] text-white/30 italic mt-2">Password for all: admin</p>
-                    </div>
-                  </div>
-                )}
                 {userRole !== UserRole.ADMIN && (
                     <div className="flex flex-col gap-3">
                         <button 

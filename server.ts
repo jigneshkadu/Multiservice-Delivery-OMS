@@ -5,6 +5,7 @@ import mysql from 'mysql2/promise';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 
 dotenv.config();
@@ -75,6 +76,10 @@ async function startServer() {
   await initDb();
 
   // --- API Endpoints ---
+  app.get('/health', (req, res) => {
+    res.json({ status: 'ok', dbConnected: !!pool });
+  });
+
   app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', dbConnected: !!pool });
   });
@@ -128,14 +133,11 @@ async function startServer() {
     } catch (err: any) { res.status(500).json({ error: err.message }); }
   });
 
-  // Root route for backend
-  app.get('/', (req, res) => {
-    res.send('Dahanu Backend API is running. Use /api/health to check status.');
-  });
-
-  // Vite middleware for development (only if not on Cloud Run)
-  const isCloudRun = !!process.env.K_SERVICE;
-  if (process.env.NODE_ENV !== 'production' && !isCloudRun) {
+  // Vite middleware for development
+  const distPath = path.join(process.cwd(), 'dist');
+  const distExists = fs.existsSync(distPath);
+  
+  if (process.env.NODE_ENV !== 'production' || !distExists) {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
